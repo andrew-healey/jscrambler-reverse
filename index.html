@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      #main {
+        overflow: hidden;
+        position: relative;
+      }
+      .nodes circle {
+        fill: steelblue;
+        stroke-width: 1;
+        stroke: white;
+        r: 10;
+      }
+
+      .links {
+        stroke: red;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <div id="main">
+      <div id="map">
+        <svg id="svg"></svg>
+      </div>
+    </div>
+    <script src="viz.js"></script>
+  </body>
