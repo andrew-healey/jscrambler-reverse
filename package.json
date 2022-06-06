@@ -1,0 +1,25 @@
+{
+  "name": "jscrambler-reverse",
+  "version": "1.0.0",
+  "description": "A project to beat JScrambler, a popular enterprise code obfuscator.",
+  "main": "index.js",
+  "dependencies": {
+    "shift-refactor": "^2.0.0",
+    "unminify": "^2.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrew-healey/jscrambler-reverse.git"
+  },
+  "author": "Andrew Healey",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andrew-healey/jscrambler-reverse/issues"
+  },
+  "homepage": "https://github.com/andrew-healey/jscrambler-reverse#readme",
+  "type":"module"
+}
