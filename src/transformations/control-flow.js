@@ -1,9 +1,39 @@
 import assert from "node:assert";
 import {is} from "../assert-utils.js";
+import {codeGen} from "shift-codegen";
+import {writeFileSync} from "node:fs";
+import Shift from "shift-ast";
 
-const checkCase = (aCase)=>{
+const countParents = (id,cases)=>{
+    return cases
+        .filter(aCase=>aCase.children.includes(id))
+        .length;
+};
+
+const replaceChildren = (cases,idToKill,newId)=>{
+    const newEdgeLog = [];
+    for(let aCase of cases){
+        const childIdx = aCase.children.indexOf(idToKill);
+        if(childIdx!=-1){
+            cases.children[childIdx]=newId;
+            newEdgeLog.push([aCase.id,newId]);
+        }
+    }
+    return newEdgeLog;
+};
+
+const getCase=(id,cases)=>cases.filter(aCase=>aCase.id===id);
+
+const checkCase = (aCase,endVal)=>{
     assert(aCase.children.length<3);
-    assert.equal(!!aCase.conditional,aCase.children.length==2);
+    assert.equal(!!aCase.conditional,aCase.children.length==2,"Unconditional nodes can't point to two children."+aCase.conditional+aCase.children.length);
+};
+
+const stringify=(statements)=>{
+    const newBlock = new Shift.Block({
+        statements
+    });
+    return codeGen(newBlock);
 };
 
 /**
@@ -27,13 +57,16 @@ const makeCase = (shiftCase,stateName)=>{
     assert.notEqual(statements.length,0);
 
     const lastStatement = statements[statements.length-1];
-    if(statements.length==1&&lastStatement.type==="ReturnStatement"){
+    if(lastStatement.type==="ReturnStatement"){
         return {
             id,
-            statements:[lastStatement],
+            statements,
             children:[],
-            condition:undefined,
+            conditional:undefined,
         };
+    }
+    if(lastStatement.type==="ReturnStatement"){
+        console.log(statements.map(st=>st.type));
     }
 
     is(lastStatement,"ExpressionStatement");
@@ -53,12 +86,12 @@ const makeCase = (shiftCase,stateName)=>{
             id,
             statements:prevStatements,
             children:[expression.value],
-            condition:undefined
+            conditional:undefined
         };
     }
 
     if(expression.type==="ConditionalExpression"){
-        const condition = expression.test;
+        const conditional = expression.test;
 
         const {consequent,alternate} = expression;
         is(consequent,"LiteralNumericExpression");
@@ -68,7 +101,7 @@ const makeCase = (shiftCase,stateName)=>{
             id,
             statements:prevStatements,
             children:[consequent.value,alternate.value],
-            condition
+            conditional
         };
     }
 
@@ -89,6 +122,32 @@ const makeCase = (shiftCase,stateName)=>{
  * Return type: Reduction?
  **/
 const reduceCases = (cases,stateName,startVal)=>{
+
+    for(let aCase of cases) {
+        checkCase(aCase);
+    }
+
+    for(let caseNum in cases){
+        const aCase=cases[caseNum];
+        
+        // Check for linearness.
+        if(aCase.children.length==1){
+            const child=getCase(aCase.children[0]);
+            if(child!==aCase && getParents(child)==1){
+                child.statements=[...aCase.statements,...child.statements];
+                cases.pop(caseNum); // Remove dead case.
+                const newEdges=replaceChildren(cases,aCase.id,child.id);
+
+                return {
+                    nodesDeleted:[aCase.id],
+                    edgesAdded:newEdges
+                };
+            }
+        }
+
+    }
+
+    // By default, return nothing.
 
 };
 
@@ -157,17 +216,48 @@ const deepenFlow = (sess)=>{
 
     const foundCases = cases.map(foundCase=> makeCase(foundCase,stateName,startVal));
 
-    let allCases = [...foundCases,builtInCase];
-    let newCases;
+    const allCases = [...foundCases,builtInCase];
 
-    do {
-        allCases = newCases;
-        newCases = reduceCases(allCases,stateName,startVal);
-    } while (newCases.length < allCases.length)
 
-    assert.equal(newCases.length,1,"The graph didn't fully reduce.");
+    // For logging purposes
+    const bareCases = allCases.map(aCase=>({
+        id:aCase.id,
+        code:stringify(aCase.statements),
+    }));
+    const bareEdges = allCases.flatMap(({id,children})=>children.map(child=>[id,child]));
+    const allReplacements = [];
 
-    const [finalCase] = newCases;
+    // Save record of modifications to a JSON file.
+    const save = ()=>{
+        const saveObj = {
+            cases:bareCases,
+            edges:bareEdges,
+            steps:allReplacements,
+        };
+
+        const serialized = JSON.stringify(saveObj,null,2);
+
+        writeFileSync("graph.json",serialized);
+    }
+
+    save();
+
+    while(true){
+        const replacement = reduceCases(allCases,stateName,startVal);
+
+        if(!replacement){
+            break;
+        }
+
+        allReplacements.push(replacement);
+
+        save();
+    }
+
+
+    assert.equal(allCases.length,1,"The graph didn't fully reduce.");
+
+    const [finalCase] = allCases;
     assert.equal(finalCase.children.length,0);
 
     containingBlock.statements = [...finalCase.statements,...containingBlock.statements.slice(2)]; // Remove the variable declaration and switch statement.

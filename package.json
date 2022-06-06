@@ -4,6 +4,8 @@
   "description": "A project to beat JScrambler, a popular enterprise code obfuscator.",
   "main": "index.js",
   "dependencies": {
+    "shift-ast": "^7.0.0",
+    "shift-codegen": "^8.0.0",
     "shift-refactor": "^2.0.0",
     "unminify": "^2.0.0"
   },
@@ -21,5 +23,5 @@
     "url": "https://github.com/andrew-healey/jscrambler-reverse/issues"
   },
   "homepage": "https://github.com/andrew-healey/jscrambler-reverse#readme",
-  "type":"module"
+  "type": "module"
 }

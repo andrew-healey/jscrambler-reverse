@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "id": 1,
+      "code": "{return globalThis}"
+    },
+    {
+      "id": 2,
+      "code": "{I=typeof globalThis===\"object\"?1:5}"
+    },
+    {
+      "id": 5,
+      "code": "{var Y;try{var J=2;for(;J!==6;){switch(J){case 3:throw\"\";J=9;break;case 2:Object[\"defineProperty\"](Object[\"prototype\"],\"KDbNE\",{get:function(){var d=2;for(;d!==1;){switch(d){case 2:return this;break}}},configurable:true});Y=KDbNE;Y[\"J8f1a\"]=Y;J=4;break;case 4:J=typeof J8f1a===\"undefined\"?3:9;break;case 9:delete Y[\"J8f1a\"];var j=Object[\"prototype\"];delete j[\"KDbNE\"];J=6;break}}}catch(C){Y=window}return Y}"
+    },
+    {
+      "code": "{}"
+    }
+  ],
+  "edges": [
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      5
+    ]
+  ],
+  "steps": []
+}
