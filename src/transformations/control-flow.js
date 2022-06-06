@@ -1,39 +1,44 @@
 import assert from "node:assert";
-import {is} from "../assert-utils.js";
-import {codeGen} from "shift-codegen";
-import {writeFileSync} from "node:fs";
+import { is } from "../assert-utils.js";
+import { codeGen } from "shift-codegen";
+import { writeFileSync } from "node:fs";
 import Shift from "shift-ast";
 
-const countParents = (id,cases)=>{
-    return cases
-        .filter(aCase=>aCase.children.includes(id))
-        .length;
+const countParents = ({id}, cases) => {
+  return cases.filter((aCase) => aCase.children.includes(id)).length;
 };
 
-const replaceChildren = (cases,idToKill,newId)=>{
-    const newEdgeLog = [];
-    for(let aCase of cases){
-        const childIdx = aCase.children.indexOf(idToKill);
-        if(childIdx!=-1){
-            cases.children[childIdx]=newId;
-            newEdgeLog.push([aCase.id,newId]);
-        }
+const replaceChildren = (cases, idToKill, newId) => {
+  const newEdgeLog = [];
+  for (let aCase of cases) {
+    const childIdx = aCase.children.indexOf(idToKill);
+    if (childIdx != -1) {
+      cases.children[childIdx] = newId;
+      newEdgeLog.push([aCase.id, newId]);
     }
-    return newEdgeLog;
+  }
+  return newEdgeLog;
 };
 
-const getCase=(id,cases)=>cases.filter(aCase=>aCase.id===id);
+const getCase = (id, cases) => cases.filter((aCase) => aCase.id === id);
 
-const checkCase = (aCase,endVal)=>{
-    assert(aCase.children.length<3);
-    assert.equal(!!aCase.conditional,aCase.children.length==2,"Unconditional nodes can't point to two children."+aCase.conditional+aCase.children.length);
+const checkCase = (aCase, endVal) => {
+  assert.notEqual(aCase.id,undefined);
+  assert(aCase.children.length < 3);
+  assert.equal(
+    !!aCase.conditional,
+    aCase.children.length == 2,
+    "Unconditional nodes can't point to two children." +
+      aCase.conditional +
+      aCase.children.length
+  );
 };
 
-const stringify=(statements)=>{
-    const newBlock = new Shift.Block({
-        statements
-    });
-    return codeGen(newBlock);
+const stringify = (statements) => {
+  const newBlock = new Shift.Block({
+    statements,
+  });
+  return codeGen(newBlock);
 };
 
 /**
@@ -41,72 +46,71 @@ const stringify=(statements)=>{
  * Converts a Shift node of a case into my own Case type.
  * Return type: Case
  **/
-const makeCase = (shiftCase,stateName)=>{
-    const {test,consequent} = shiftCase;
+const makeCase = (shiftCase, stateName) => {
+  const { test, consequent } = shiftCase;
 
-    is(test,"LiteralNumericExpression");
+  is(test, "LiteralNumericExpression");
 
-    const id=test.value;
+  const id = test.value;
 
-    assert.notEqual(consequent.length,0);
+  assert.notEqual(consequent.length, 0);
 
-    is(consequent[consequent.length-1],"BreakStatement");
+  is(consequent[consequent.length - 1], "BreakStatement");
 
-    const statements = consequent.slice(0,consequent.length-1);
+  const statements = consequent.slice(0, consequent.length - 1);
 
-    assert.notEqual(statements.length,0);
+  assert.notEqual(statements.length, 0);
 
-    const lastStatement = statements[statements.length-1];
-    if(lastStatement.type==="ReturnStatement"){
-        return {
-            id,
-            statements,
-            children:[],
-            conditional:undefined,
-        };
-    }
-    if(lastStatement.type==="ReturnStatement"){
-        console.log(statements.map(st=>st.type));
-    }
+  const lastStatement = statements[statements.length - 1];
+  if (lastStatement.type === "ReturnStatement") {
+    return {
+      id,
+      statements,
+      children: [],
+      conditional: undefined,
+    };
+  }
+  if (lastStatement.type === "ReturnStatement") {
+    console.log(statements.map((st) => st.type));
+  }
 
-    is(lastStatement,"ExpressionStatement");
-    const assignExp = lastStatement.expression;
-    is(assignExp,"AssignmentExpression");
-    
-    const {binding,expression} = assignExp;
+  is(lastStatement, "ExpressionStatement");
+  const assignExp = lastStatement.expression;
+  is(assignExp, "AssignmentExpression");
 
-    is(binding,"AssignmentTargetIdentifier");
-    assert.equal(binding.name,stateName);
+  const { binding, expression } = assignExp;
 
-    const prevStatements = statements.slice(statements.length-1);
+  is(binding, "AssignmentTargetIdentifier");
+  assert.equal(binding.name, stateName);
 
-    if(expression.type==="LiteralNumericExpression"){
-        // Simple linear step.
-        return {
-            id,
-            statements:prevStatements,
-            children:[expression.value],
-            conditional:undefined
-        };
-    }
+  const prevStatements = statements.slice(statements.length - 1);
 
-    if(expression.type==="ConditionalExpression"){
-        const conditional = expression.test;
+  if (expression.type === "LiteralNumericExpression") {
+    // Simple linear step.
+    return {
+      id,
+      statements: prevStatements,
+      children: [expression.value],
+      conditional: undefined,
+    };
+  }
 
-        const {consequent,alternate} = expression;
-        is(consequent,"LiteralNumericExpression");
-        is(alternate,"LiteralNumericExpression");
+  if (expression.type === "ConditionalExpression") {
+    const conditional = expression.test;
 
-        return {
-            id,
-            statements:prevStatements,
-            children:[consequent.value,alternate.value],
-            conditional
-        };
-    }
+    const { consequent, alternate } = expression;
+    is(consequent, "LiteralNumericExpression");
+    is(alternate, "LiteralNumericExpression");
 
-    assert.fail("Case doesn't match any known pattern.");
+    return {
+      id,
+      statements: prevStatements,
+      children: [consequent.value, alternate.value],
+      conditional,
+    };
+  }
 
+  assert.fail("Case doesn't match any known pattern.");
 };
 
 /*
@@ -121,163 +125,184 @@ const makeCase = (shiftCase,stateName)=>{
  * Iterates through all cases in the object. If it finds a pair of nodes it can reduce, it reduces them and returns info about the reduction. Otherwise, returns undefined.
  * Return type: Reduction?
  **/
-const reduceCases = (cases,stateName,startVal)=>{
+const reduceCases = (cases, stateName, startVal) => {
+  for (let aCase of cases) {
+    checkCase(aCase);
+  }
 
-    for(let aCase of cases) {
-        checkCase(aCase);
+  for (let caseNum in cases) {
+    const aCase = cases[caseNum];
+
+    // Check for disconnected cases.
+    if (startVal !== aCase.id && countParents(aCase,cases) == 0) {
+        console.log("Popping");
+        cases.splice(caseNum,1);
+        return {
+            nodesDeleted:[aCase.id],
+            edgesAdded:[],
+        };
     }
 
-    for(let caseNum in cases){
-        const aCase=cases[caseNum];
-        
-        // Check for linearness.
-        if(aCase.children.length==1){
-            const child=getCase(aCase.children[0]);
-            if(child!==aCase && getParents(child)==1){
-                child.statements=[...aCase.statements,...child.statements];
-                cases.pop(caseNum); // Remove dead case.
-                const newEdges=replaceChildren(cases,aCase.id,child.id);
+    // Check for linearness.
+    if (aCase.children.length == 1) {
+      const child = getCase(aCase.children[0],cases);
+      if (child !== aCase && countParents(child,cases) == 1) {
+        child.statements = [...aCase.statements, ...child.statements];
+        cases.splice(caseNum,1); // Remove dead case.
+        const newEdges = replaceChildren(cases, aCase.id, child.id);
 
-                return {
-                    nodesDeleted:[aCase.id],
-                    edgesAdded:newEdges
-                };
-            }
-        }
-
+        return {
+          nodesDeleted: [aCase.id],
+          edgesAdded: newEdges,
+        };
+      }
     }
+  }
 
-    // By default, return nothing.
-
+  // By default, return nothing.
 };
 
-const deepenFlow = (sess)=>{
-    const switcher=sess(`VariableDeclarationStatement:first-child + ForStatement > BlockStatement > Block > SwitchStatement`).get(0);
-    is(switcher,"SwitchStatement");
+const deepenFlow = (sess) => {
+  const switcher = sess(
+    `VariableDeclarationStatement:first-child + ForStatement > BlockStatement > Block > SwitchStatement`
+  ).get(0);
+  is(switcher, "SwitchStatement");
 
-    if(!switcher) return false;
+  if (!switcher) return false;
 
-    const forLoop = sess(switcher).parents().parents().parents().get(0);
-    is(forLoop,"ForStatement");
+  const forLoop = sess(switcher).parents().parents().parents().get(0);
+  is(forLoop, "ForStatement");
 
-    const containingBlock = sess(forLoop).parents().get(0); // Block-like object.
-    assert(containingBlock.statements,"Containing block has no statements. Not blocky. Type: "+containingBlock?.type);
+  const containingBlock = sess(forLoop).parents().get(0); // Block-like object.
+  assert(
+    containingBlock.statements,
+    "Containing block has no statements. Not blocky. Type: " +
+      containingBlock?.type
+  );
 
-    const stateDeclSt = sess(containingBlock).statements().get(0);
-    is(stateDeclSt,"VariableDeclarationStatement");
+  const stateDeclSt = sess(containingBlock).statements().get(0);
+  is(stateDeclSt, "VariableDeclarationStatement");
 
-    const decl = stateDeclSt.declaration;
-    assert.equal(decl.declarators.length,1);
+  const decl = stateDeclSt.declaration;
+  assert.equal(decl.declarators.length, 1);
 
-    const stateVar=decl.declarators[0];
+  const stateVar = decl.declarators[0];
 
-    const {binding,init} = stateVar;
+  const { binding, init } = stateVar;
 
-    assert(binding);
-    assert(init);
+  assert(binding);
+  assert(init);
 
-    const stateName = binding.name;
-    const startVal = init.value;
+  const stateName = binding.name;
+  const startVal = init.value;
 
-    assert(stateName);
-    assert(startVal);
+  assert(stateName);
+  assert(startVal);
 
-    const {test} = forLoop;
+  const { test } = forLoop;
 
-    is(test,"BinaryExpression");
+  is(test, "BinaryExpression");
 
-    const {left,right}=test;
+  const { left, right } = test;
 
-    is(left,"IdentifierExpression");
-    assert.equal(left.name,stateName);
+  is(left, "IdentifierExpression");
+  assert.equal(left.name, stateName);
 
-    is(right,"LiteralNumericExpression");
+  is(right, "LiteralNumericExpression");
 
-    const endVal = right.value;
+  const endVal = right.value;
 
-    const {discriminant,cases} = switcher;
-    is(discriminant,"IdentifierExpression");
-    assert.equal(discriminant.name,stateName);
+  const { discriminant, cases } = switcher;
+  is(discriminant, "IdentifierExpression");
+  assert.equal(discriminant.name, stateName);
 
-    /*
-     * type Case {
-     *   id:number;
-     *   statements:Shift.____Statement[];
-     *   conditional:Shift.____Expression;
-     *   children:number[];
-     * }
-     */
+  /*
+   * type Case {
+   *   id:number;
+   *   statements:Shift.____Statement[];
+   *   conditional:Shift.____Expression;
+   *   children:number[];
+   * }
+   */
 
-    const builtInCase = {
-        number:endVal,
-        statements:[],
-        children:[],
+  const builtInCase = {
+    id: endVal,
+    statements: [],
+    children: [],
+  };
+
+  const foundCases = cases.map((foundCase) =>
+    makeCase(foundCase, stateName, startVal)
+  );
+
+  const allCases = [...foundCases, builtInCase];
+
+  // For logging purposes
+  const bareCases = allCases.map((aCase) => ({
+    id: aCase.id,
+    code: stringify(aCase.statements),
+  }));
+  const bareEdges = allCases.flatMap(({ id, children }) =>
+    children.map((child) => [id, child])
+  );
+  const allReplacements = [];
+
+  // Save record of modifications to a JSON file.
+  const save = () => {
+    const saveObj = {
+      cases: bareCases,
+      edges: bareEdges,
+      steps: allReplacements,
     };
 
-    const foundCases = cases.map(foundCase=> makeCase(foundCase,stateName,startVal));
+    const serialized = JSON.stringify(saveObj, null, 2);
 
-    const allCases = [...foundCases,builtInCase];
+    writeFileSync("graph.json", serialized);
+  };
 
+  save();
 
-    // For logging purposes
-    const bareCases = allCases.map(aCase=>({
-        id:aCase.id,
-        code:stringify(aCase.statements),
-    }));
-    const bareEdges = allCases.flatMap(({id,children})=>children.map(child=>[id,child]));
-    const allReplacements = [];
+  while (true) {
+    const replacement = reduceCases(allCases, stateName, startVal);
 
-    // Save record of modifications to a JSON file.
-    const save = ()=>{
-        const saveObj = {
-            cases:bareCases,
-            edges:bareEdges,
-            steps:allReplacements,
-        };
-
-        const serialized = JSON.stringify(saveObj,null,2);
-
-        writeFileSync("graph.json",serialized);
+    if (!replacement) {
+      break;
     }
+
+    allReplacements.push(replacement);
 
     save();
+  }
 
-    while(true){
-        const replacement = reduceCases(allCases,stateName,startVal);
+  //assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
 
-        if(!replacement){
-            break;
-        }
+  const [finalCase] = allCases;
+  //assert.equal(finalCase.children.length, 0);
 
-        allReplacements.push(replacement);
+  containingBlock.statements = [
+    ...finalCase.statements,
+    ...containingBlock.statements.slice(2),
+  ]; // Remove the variable declaration and switch statement.
 
-        save();
-    }
+  sess(forLoop).delete();
+  sess(stateDeclSt).delete();
 
-
-    assert.equal(allCases.length,1,"The graph didn't fully reduce.");
-
-    const [finalCase] = allCases;
-    assert.equal(finalCase.children.length,0);
-
-    containingBlock.statements = [...finalCase.statements,...containingBlock.statements.slice(2)]; // Remove the variable declaration and switch statement.
-
-    $(forLoop).delete();
-    $(stateDeclSt).delete();
-
+  return true;
 };
 
-export default (sess)=>{
-    while(true){
-        const deepenedFlow = deepenFlow(sess);
+export default (sess) => {
 
-        if(!deepenedFlow) {
-            break;
-        }
-        session.isDirty(true);
+  // Cleanup.
+  const { session } = sess;
+
+  while (true) {
+    const deepenedFlow = deepenFlow(sess);
+
+    if (!deepenedFlow) {
+      break;
     }
+    //sess.isDirty(true);
+  }
 
-    // Cleanup.
-    const {session} = sess;
-    session.globalState.conditionalCleanup();
+  //session.globalState.conditionalCleanup();
 };
