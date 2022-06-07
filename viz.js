@@ -1,5 +1,7 @@
 window.onload = async () => {
-  const { cases, edges, steps } = await (await fetch('graph.json')).json();
+  const { startCase, cases, edges, steps } = await (
+    await fetch('graph.json')
+  ).json();
 
   let currStep = 0;
 
@@ -11,12 +13,12 @@ window.onload = async () => {
   const rad = 50;
   const linesRatio = 0.2;
   const dist = (rad + 20) * 3;
-  const charge = (rad + 10) * -10;
+  const charge = (rad + 10) * -15;
 
   let nodesArray, linksArray;
 
   const getRadius = (node) =>
-    rad + Math.floor(node.code.split('\n').length * linesRatio);
+    rad + Math.floor(node.code.split('\n').length * linesRatio) + 2;
 
   const makeArrays = () => {
     nodesArray = cases.map((oneCase) => ({
@@ -196,6 +198,11 @@ window.onload = async () => {
         );
         return getRadius(editRecord);
       });
+    nodes
+      .select('text.num')
+      .attr('stroke', (node) =>
+        steps[currStep]?.nodesDeleted?.includes?.(node.id) ? 'red' : 'blue',
+      );
   };
 
   const makeNodes = (someNodes) => {
@@ -206,7 +213,12 @@ window.onload = async () => {
       .attr('transform', (node) => `translate(${node.x},${node.y})`)
       .on('click', replace);
 
-    nodes.append('circle').attr('cx', 0).attr('cy', 0).attr('r', getRadius);
+    nodes
+      .append('circle')
+      .attr('cx', 0)
+      .attr('cy', 0)
+      .attr('r', getRadius)
+      .attr('class', (node) => (node.id === startCase ? 'start' : ''));
 
     nodes
       .append('g')
@@ -217,6 +229,20 @@ window.onload = async () => {
       .selectAll('svg')
       .attr('width', rad * 2)
       .attr('height', rad * 2);
+
+    nodes
+      .append('text')
+      .attr('class', 'num')
+      .text((node) => node.id)
+      .attr('transform', (node) => {
+        const radius = getRadius(node);
+        const dist = radius / Math.sqrt(2);
+        return `translate(-${dist},${dist})`;
+      })
+      .attr('stroke', (node) =>
+        steps[currStep]?.nodesDeleted?.includes?.(node.id) ? 'red' : 'blue',
+      )
+      .attr('font-family', 'Consolas');
 
     return nodes;
   };

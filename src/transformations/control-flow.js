@@ -25,12 +25,19 @@ const replaceChildren = (cases, idToKill, newId) => {
   for (let aCase of cases) {
     const childIdx = aCase.children.indexOf(idToKill);
     if (childIdx != -1) {
-      cases.children[childIdx] = newId;
+      aCase.children[childIdx] = newId;
       newEdgeLog.push([aCase.id, newId]);
     }
   }
   return newEdgeLog;
 };
+
+const makeBlock = (node) =>
+  new Shift.BlockStatement({
+    block: new Shift.Block({
+      statements: node.statements,
+    }),
+  });
 
 const getCase = (id, cases) => cases.find((aCase) => aCase.id === id);
 
@@ -54,12 +61,6 @@ const scarbon = (code) => {
   const dataUrl = `data:image/svg+xml;utf8,${svg.replace(/$\s/gm, ' ')}`;
   return svg;
 };
-
-console.log(
-  scarbon(`
-console.log(a+2*3);
-`),
-);
 
 const stringify = (statements) => {
   const newBlock = new Shift.Block({
@@ -99,9 +100,6 @@ const makeCase = (shiftCase, stateName) => {
       conditional: undefined,
     };
   }
-  if (lastStatement.type === 'ReturnStatement') {
-    console.log(statements.map((st) => st.type));
-  }
 
   is(lastStatement, 'ExpressionStatement');
   const assignExp = lastStatement.expression;
@@ -112,7 +110,7 @@ const makeCase = (shiftCase, stateName) => {
   is(binding, 'AssignmentTargetIdentifier');
   assert.equal(binding.name, stateName);
 
-  const prevStatements = statements.slice(statements.length - 1);
+  const prevStatements = statements.slice(0, statements.length - 1);
 
   if (expression.type === 'LiteralNumericExpression') {
     // Simple linear step.
@@ -170,23 +168,32 @@ const reduceCases = (cases, stateName, startVal) => {
         nodesDeleted: [aCase.id],
         edgesAdded: [],
         editedNodes: [],
+        type: 'Floating',
       };
     }
 
     // Check for linearness.
     if (aCase.children.length == 1) {
       const child = getCase(aCase.children[0], cases);
-      if (child !== aCase && countParents(child, cases) == 1) {
+      if (
+        child !== aCase &&
+        !child.children.includes(aCase.id) &&
+        countParents(child, cases) == 1
+      ) {
         aCase.statements = [...aCase.statements, ...child.statements];
-        aCase.condition = child.condition;
+        aCase.conditional = child.conditional;
         aCase.children = child.children;
+        const newEdges = [
+          ...replaceChildren(cases, child.id, aCase.id),
+          ...aCase.children.map((childId) => [aCase.id, childId]),
+        ];
         const nodesDeleted = deleteNodes(cases, [child.id]);
-        const newEdges = replaceChildren(cases, child.id, aCase.id);
 
         return {
           nodesDeleted,
           edgesAdded: newEdges,
           editedNodes: [aCase],
+          type: 'Linear',
         };
       }
     }
@@ -194,18 +201,15 @@ const reduceCases = (cases, stateName, startVal) => {
     if (aCase.children.length == 2) {
       const cons = getCase(aCase.children[0], cases);
       const alt = getCase(aCase.children[1], cases);
-      console.log('Found two children. IDS are', cons.id, alt.id);
 
       const isSimpleLeaf = (node) =>
-        countParents(node, cases) == 1 && node.children.length == 0;
+        countParents(node, cases) == 1 && node.children.length < 2;
 
-      if (isSimpleLeaf(cons) && isSimpleLeaf(alt)) {
-        const makeBlock = (node) =>
-          new Shift.BlockStatement({
-            block: new Shift.Block({
-              statements: node.statements,
-            }),
-          });
+      if (
+        isSimpleLeaf(cons) &&
+        countParents(alt, cases) == 1 &&
+        alt.children[0] == cons.children[0]
+      ) {
         const finalIf = new Shift.IfStatement({
           test: aCase.conditional,
           consequent: makeBlock(cons),
@@ -213,14 +217,83 @@ const reduceCases = (cases, stateName, startVal) => {
         });
         const nodesDeleted = deleteNodes(cases, [cons.id, alt.id]);
         aCase.statements = [...aCase.statements, finalIf];
-        aCase.children = [];
+        aCase.children = alt.children;
         aCase.conditional = undefined;
 
         return {
           nodesDeleted,
-          edgesAdded: [],
+          edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
           editedNodes: [aCase],
+          type: 'If/else',
         };
+      }
+
+      if (
+        countParents(alt, cases) == 2 &&
+        countParents(cons, cases) == 1 &&
+        cons.children.length == 1 &&
+        cons.children[0] == alt.id
+      ) {
+        const finalIf = new Shift.IfStatement({
+          test: aCase.conditional,
+          consequent: makeBlock(cons),
+        });
+        aCase.statements = [...aCase.statements, finalIf, ...alt.statements];
+        aCase.children = alt.children;
+
+        aCase.conditional = undefined;
+
+        const nodesDeleted = deleteNodes(cases, [cons.id, alt.id]);
+
+        return {
+          nodesDeleted,
+          edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
+          editedNodes: [aCase],
+          type: 'If',
+        };
+      }
+
+      if (
+        countParents(alt, cases) == 1 &&
+        cons.children.length == 1 &&
+        cons.children[0] == aCase.id &&
+        aCase.statements.length == 0
+      ) {
+        if (countParents(cons, cases) == 1 && countParents(aCase, cases) == 2) {
+          const finalWhile = new Shift.WhileStatement({
+            test: aCase.conditional,
+            body: makeBlock(cons),
+          });
+          aCase.statements = [finalWhile];
+          aCase.children = [alt.id];
+          aCase.conditional = undefined;
+
+          const nodesDeleted = deleteNodes(cases, [cons.id]);
+          return {
+            nodesDeleted,
+            edgesAdded: [],
+            editedNodes: [aCase],
+            type: 'While',
+          };
+        }
+
+        if (countParents(cons, cases) == 2 && countParents(aCase, cases) == 1) {
+          const finalDoWhile = new Shift.DoWhileStatement({
+            test: aCase.conditional,
+            body: makeBlock(cons),
+          });
+          cons.statements = [finalDoWhile];
+          cons.children = [alt.id];
+          cons.conditional = undefined;
+
+          const nodesDeleted = deleteNodes(cases, [aCase.id]);
+          return {
+            nodesDeleted,
+            edgesAdded: [],
+            editedNodes: [cons],
+            type: 'DoWhile',
+          };
+        }
       }
     }
   }
@@ -245,6 +318,9 @@ const deepenFlow = (sess) => {
     'Containing block has no statements. Not blocky. Type: ' +
       containingBlock?.type,
   );
+
+  const fullBlock = sess(containingBlock).codegen()[0];
+  writeFileSync('case-block.js', fullBlock);
 
   const stateDeclSt = sess(containingBlock).statements().get(0);
   is(stateDeclSt, 'VariableDeclarationStatement');
@@ -324,6 +400,7 @@ const deepenFlow = (sess) => {
   // Save record of modifications to a JSON file.
   const save = () => {
     const saveObj = {
+      startCase: startVal,
       cases: bareCases,
       edges: bareEdges,
       steps: allReplacements,
@@ -354,10 +431,13 @@ const deepenFlow = (sess) => {
       };
     });
 
+    console.log(replacement.type);
+
     const newReplacement = {
       nodesDeleted: replacement.nodesDeleted,
       edgesAdded: replacement.edgesAdded,
       editedNodes: newEdits,
+      type: replacement.type,
     };
 
     allReplacements.push(newReplacement);
@@ -366,7 +446,6 @@ const deepenFlow = (sess) => {
   }
 
   assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
-  assert.fail('Demo fail.');
 
   const [finalCase] = allCases;
   assert.equal(finalCase.children.length, 0);
