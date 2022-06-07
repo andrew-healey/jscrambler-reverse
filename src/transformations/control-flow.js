@@ -1,8 +1,10 @@
 import assert from "node:assert";
 import { is } from "../assert-utils.js";
 import { codeGen } from "shift-codegen";
+import {refactor} from "shift-refactor";
 import { writeFileSync } from "node:fs";
 import Shift from "shift-ast";
+import Scarbon from "scarbon";
 
 const countParents = ({id}, cases) => {
   return cases.filter((aCase) => aCase.children.includes(id)).length;
@@ -34,11 +36,26 @@ const checkCase = (aCase, endVal) => {
   );
 };
 
+const renderer=await new Scarbon({
+    lang:"js"
+});
+const scarbon = (code) =>{
+    const svg=renderer.svg(code);
+    const dataUrl=`data:image/svg+xml;utf8,${svg.replace(/$\s/gm," ")}`;
+    return svg;
+};
+
+console.log(scarbon(`
+console.log(a+2*3);
+`));
+
 const stringify = (statements) => {
   const newBlock = new Shift.Block({
     statements,
   });
-  return codeGen(newBlock);
+  const sess=refactor(newBlock);
+  return sess.codegen()[0];
+  //return codeGen(newBlock);
 };
 
 /**
@@ -241,7 +258,13 @@ const deepenFlow = (sess) => {
   const bareCases = allCases.map((aCase) => ({
     id: aCase.id,
     code: stringify(aCase.statements),
-  }));
+  })).map(aCase=>{
+      const {code} = aCase;
+      return {
+          ...aCase,
+          svg:scarbon(code)
+      }
+  });
   const bareEdges = allCases.flatMap(({ id, children }) =>
     children.map((child) => [id, child])
   );
@@ -274,10 +297,10 @@ const deepenFlow = (sess) => {
     save();
   }
 
-  //assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
+  assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
 
   const [finalCase] = allCases;
-  //assert.equal(finalCase.children.length, 0);
+  assert.equal(finalCase.children.length, 0);
 
   containingBlock.statements = [
     ...finalCase.statements,

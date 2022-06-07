@@ -5,8 +5,12 @@ window.onload = async () => {
 
   const svg = d3.select("svg");
 
-  const width = 960;
-  const height = 500;
+  const width = 1920;
+  const height = 900;
+
+  const rad = 50;
+  const dist = rad * 3;
+  const charge = rad * -10;
 
   let nodesArray, linksArray;
 
@@ -14,6 +18,7 @@ window.onload = async () => {
     nodesArray = cases.map((oneCase) => ({
       id: oneCase.id,
       code: oneCase.code,
+      svg: oneCase.svg,
       x: width / 2,
       y: height / 2,
     }));
@@ -25,10 +30,22 @@ window.onload = async () => {
 
   makeArrays();
 
+  svg.append("defs").html(`
+<defs>
+    <clipPath id="circle-cutout">
+      <circle cx="${rad}" cy="${rad}" r=${rad} />
+    </clipPath>
+  </defs>
+    `);
+
   svg.attr("width", width).attr("height", height);
 
   const updateLocations = () => {
-    nodes.attr("cx", (node) => node.x).attr("cy", (node) => node.y);
+    nodes.attr("transform", (node) => {
+      console.log("transform");
+      return `translate(${node.x},${node.y})`;
+    });
+
     links = g_links
       .selectAll("line")
       .attr("x2", (edge) => edge.source.x)
@@ -39,13 +56,13 @@ window.onload = async () => {
 
   const simulation = d3
     .forceSimulation(nodesArray)
-    .force("charge", d3.forceManyBody().strength(-100))
+    .force("charge", d3.forceManyBody().strength(charge))
     .force(
       "link",
       d3
         .forceLink(linksArray)
         .id((node) => node.id)
-        .distance(20)
+        .distance(dist)
         .strength(1)
     )
     .force("x", d3.forceX(width / 2))
@@ -79,7 +96,6 @@ window.onload = async () => {
       currStep = 0;
     } else {
       const { nodesDeleted, edgesAdded } = steps[currStep];
-      currStep++;
 
       nodesArray = nodesArray.filter((node) => !nodesDeleted.includes(node.id));
       prunedArray = linksArray.filter(
@@ -96,6 +112,7 @@ window.onload = async () => {
           target: edge[1],
         })),
       ];
+      currStep++;
     }
 
     simulation.nodes(nodesArray);
@@ -105,7 +122,7 @@ window.onload = async () => {
       d3
         .forceLink(linksArray)
         .id((node) => node.id)
-        .distance(20)
+        .distance(dist)
         .strength(1)
     );
     simulation.alpha(1);
@@ -113,21 +130,44 @@ window.onload = async () => {
     reRender();
   };
 
-  let nodes = g_nodes
-    .selectAll("circle")
+  const makeNodes = (someNodes) => {
+    const nodes = someNodes
+      .enter()
+      .append("g")
+      .attr("class", "circle")
+      .attr("transform", (node) => `translate(${node.x},${node.y})`)
+      .on("click", replace);
+
+    nodes
+      .append("circle")
+      .attr("cx", 0)
+      .attr("cy", 0)
+      .attr("r", (node) => rad + 2);
+
+    nodes
+      .append("g")
+      .attr("transform", `translate(${-rad},${-rad})`)
+      .attr("clip-path", "url(#circle-cutout)")
+      .html((node) => node.svg)
+      .selectAll("svg")
+      .attr("width", rad * 2)
+      .attr("height", rad * 2);
+
+    return nodes;
+  };
+
+  let nodes = makeNodes(g_nodes
+    .selectAll("g")
     .data(nodesArray)
-    .enter()
-    .append("circle")
-    .attr("cx", (node) => node.x)
-    .attr("cy", (node) => node.y)
-    .on("click", replace);
+  )
+  
 
   rect.on("click", replace, true);
 
   const reRender = () => {
-    const update_nodes = g_nodes.selectAll("circle").data(nodesArray);
+    const update_nodes = g_nodes.selectAll("g.circle").data(nodesArray);
     update_nodes.exit().remove();
-    nodes = update_nodes.enter().append("circle").merge(update_nodes);
+    nodes = makeNodes(update_nodes).merge(update_nodes);
 
     const update_links = g_links.selectAll("line").data(linksArray);
     update_links.exit().remove();
