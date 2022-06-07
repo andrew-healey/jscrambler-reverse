@@ -16,10 +16,10 @@ window.onload = async () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  const rad = 50;
-  const linesRatio = 0.2;
-  const dist = (rad + 20) * 3;
-  const charge = (rad + 10) * -15;
+  const rad = 30;
+  const linesRatio = 5;
+  const dist = 3;
+  const charge = (rad + 10) * -20;
 
   let nodesArray, linksArray;
 
@@ -90,13 +90,19 @@ window.onload = async () => {
 
   const simulation = d3
     .forceSimulation(nodesArray)
-    .force('charge', d3.forceManyBody().strength(charge))
+    .force(
+      'charge',
+      d3.forceManyBody().strength((node) => getRadius(node) * -10),
+    )
     .force(
       'link',
       d3
         .forceLink(linksArray)
         .id((node) => node.id)
-        .distance(dist)
+        .distance(
+          (link) =>
+            (dist * (getRadius(link.source) + getRadius(link.target))) / 2,
+        )
         .strength(1),
     )
     .force('x', d3.forceX(width / 2))
@@ -127,7 +133,6 @@ window.onload = async () => {
 
   // Perform the next step in the replacement process.
   const replace = () => {
-    let editedNodes = [];
     let renderMethod;
     if (currStep >= steps.length) {
       makeArrays();
@@ -135,8 +140,16 @@ window.onload = async () => {
       renderMethod = nuke;
     } else {
       renderMethod = reRender;
-      const { nodesDeleted, edgesAdded, ...rest } = steps[currStep];
-      ({ editedNodes } = rest);
+      const { nodesDeleted, edgesAdded, editedNodes } = steps[currStep];
+
+      nodesArray.forEach((node) => {
+        console.log(node);
+        const editRecord = editedNodes.find((record) => record.id === node.id);
+        if (editRecord) {
+          node.code = editRecord.code;
+          node.svg = editRecord.svg;
+        }
+      });
 
       nodesArray = nodesArray.filter((node) => !nodesDeleted.includes(node.id));
 
@@ -164,7 +177,10 @@ window.onload = async () => {
       d3
         .forceLink(linksArray)
         .id((node) => node.id)
-        .distance(dist)
+        .distance(
+          (link) =>
+            (dist * (getRadius(link.source) + getRadius(link.target))) / 2,
+        )
         .strength(1),
     );
     simulation.alpha(1);
@@ -173,36 +189,23 @@ window.onload = async () => {
 
     nodes
       .select('.preview')
-      .filter(
-        (node) =>
-          editedNodes.findIndex((editRecord) => editRecord.id == node.id) !==
-          -1,
+      .attr(
+        'transform',
+        (node) => `translate(${-getRadius(node)},${-getRadius(node)})`,
       )
-      .html((node) => {
-        const editRecord = editedNodes.find(
-          (editRecord) => editRecord.id == node.id,
-        );
-        return editRecord.svg;
-      })
-      .selectAll('svg')
-      .attr('width', rad * 2)
-      .attr('height', rad * 2);
+      .html((node) => node.svg)
+      .select('svg')
+      .attr('height', (node) => getRadius(node) * 2)
+      .attr('width', (node) => getRadius(node) * 2);
 
-    nodes
-      .select('circle')
-      .filter(
-        (node) =>
-          editedNodes.findIndex((editRecord) => editRecord.id == node.id) !==
-          -1,
-      )
-      .attr('r', (node) => {
-        const editRecord = editedNodes.find(
-          (editRecord) => editRecord.id == node.id,
-        );
-        return getRadius(editRecord);
-      });
+    nodes.select('circle').attr('r', getRadius);
     nodes
       .select('text.num')
+      .attr('transform', (node) => {
+        const radius = getRadius(node);
+        const dist = radius / Math.sqrt(2);
+        return `translate(-${0},${dist})`;
+      })
       .attr('stroke', (node) =>
         steps[currStep]?.nodesDeleted?.includes?.(node.id) ? 'red' : 'blue',
       );
@@ -250,12 +253,15 @@ window.onload = async () => {
     nodes
       .append('g')
       .attr('class', 'preview')
-      .attr('transform', `translate(${-rad},${-rad})`)
-      .attr('clip-path', 'url(#circle-cutout)')
+      .attr(
+        'transform',
+        (node) => `translate(${-getRadius(node)},${-getRadius(node)})`,
+      )
+      .attr('clip-path', 'circle(50%)')
       .html((node) => node.svg)
-      .selectAll('svg')
-      .attr('width', rad * 2)
-      .attr('height', rad * 2);
+      .select('svg')
+      .attr('width', (node) => getRadius(node) * 2)
+      .attr('height', (node) => getRadius(node) * 2);
 
     nodes
       .append('text')
@@ -264,7 +270,7 @@ window.onload = async () => {
       .attr('transform', (node) => {
         const radius = getRadius(node);
         const dist = radius / Math.sqrt(2);
-        return `translate(-${dist},${dist})`;
+        return `translate(-${0},${dist})`;
       })
       .attr('stroke', (node) =>
         steps[currStep]?.nodesDeleted?.includes?.(node.id) ? 'red' : 'blue',

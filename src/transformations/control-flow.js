@@ -289,7 +289,7 @@ const reduceCases = (cases, stateName, startVal) => {
           const nodesDeleted = deleteNodes(cases, [aCase.id]);
           return {
             nodesDeleted,
-            edgesAdded: [],
+            edgesAdded: [[cons.id, alt.id]],
             editedNodes: [cons],
             type: 'DoWhile',
           };
@@ -450,6 +450,8 @@ const deepenFlow = (sess) => {
   }
 
   assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
+
+  console.log(numOps);
 
   if (numOps > 4) save(true);
 

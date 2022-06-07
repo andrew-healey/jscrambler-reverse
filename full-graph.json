@@ -189,7 +189,12 @@
       "nodesDeleted": [
         6
       ],
-      "edgesAdded": [],
+      "edgesAdded": [
+        [
+          8,
+          14
+        ]
+      ],
       "editedNodes": [
         {
           "id": 8,

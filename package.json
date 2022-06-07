@@ -10,6 +10,8 @@
     "shift-ast": "^7.0.0",
     "shift-codegen": "^8.0.0",
     "shift-refactor": "^2.0.0",
+    "shiki": "^0.10.1",
+    "shiki-renderer-svg": "^0.10.1",
     "unminify": "^2.0.0"
   },
   "devDependencies": {},
