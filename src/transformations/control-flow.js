@@ -413,12 +413,16 @@ const deepenFlow = (sess) => {
 
   save(false);
 
+  let numOps = 0;
+
   while (true) {
     const replacement = reduceCases(allCases, stateName, startVal);
 
     if (!replacement) {
       break;
     }
+
+    numOps++;
 
     const newEdits = replacement.editedNodes.map((node) => {
       const code = stringify(node.statements);
@@ -447,7 +451,7 @@ const deepenFlow = (sess) => {
 
   assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
 
-  save(true);
+  if (numOps > 4) save(true);
 
   const [finalCase] = allCases;
   assert.equal(finalCase.children.length, 0);

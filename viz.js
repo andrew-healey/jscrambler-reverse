@@ -13,8 +13,8 @@ window.onload = async () => {
 
   const svg = d3.select('svg');
 
-  const width = 1920;
-  const height = 900;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
 
   const rad = 50;
   const linesRatio = 0.2;
@@ -208,13 +208,37 @@ window.onload = async () => {
       );
   };
 
+  const dragStarted = (node) => {
+    if (!d3.event.active) simulation.alpha(0.03).restart();
+    node.fx = node.x;
+    node.fy = node.y;
+  };
+
+  const dragged = (node) => {
+    node.fx = d3.event.x;
+    node.fy = d3.event.y;
+  };
+
+  const dragEnded = (node) => {
+    if (!d3.event.active) simulation.alpha(0.03).restart();
+    node.fx = null;
+    node.fy = null;
+  };
+
   const makeNodes = (someNodes) => {
     const nodes = someNodes
       .enter()
       .append('g')
       .attr('class', 'circle')
       .attr('transform', (node) => `translate(${node.x},${node.y})`)
-      .on('click', replace);
+      .on('click', replace)
+      .call(
+        d3
+          .drag() // call specific function when circle is dragged
+          .on('start', dragStarted)
+          .on('drag', dragged)
+          .on('end', dragEnded),
+      );
 
     nodes
       .append('circle')
