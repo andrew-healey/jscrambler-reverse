@@ -398,7 +398,7 @@ const deepenFlow = (sess) => {
   const allReplacements = [];
 
   // Save record of modifications to a JSON file.
-  const save = () => {
+  const save = (done) => {
     const saveObj = {
       startCase: startVal,
       cases: bareCases,
@@ -408,10 +408,10 @@ const deepenFlow = (sess) => {
 
     const serialized = JSON.stringify(saveObj, null, 2);
 
-    writeFileSync('graph.json', serialized);
+    writeFileSync((done ? 'full' : 'partial') + '-graph.json', serialized);
   };
 
-  save();
+  save(false);
 
   while (true) {
     const replacement = reduceCases(allCases, stateName, startVal);
@@ -442,10 +442,12 @@ const deepenFlow = (sess) => {
 
     allReplacements.push(newReplacement);
 
-    save();
+    save(false);
   }
 
   assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
+
+  save(true);
 
   const [finalCase] = allCases;
   assert.equal(finalCase.children.length, 0);

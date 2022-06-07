@@ -1,0 +1,209 @@
+{
+  "startCase": 2,
+  "cases": [
+    {
+      "id": 20,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-4, 4).N0jkgX(0, 2));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">4</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">4</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">2</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 7,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 4,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 10,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 14,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 6,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-8, 8).N0jkgX(0, 6));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">8</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">8</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">6</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 5,
+      "code": "{\n  return G8++;\n}",
+      "svg": "<svg viewBox=\"0 0 462 257.59999999999997\" width=\"462\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"462\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#C586C0\">return</tspan><tspan x=\"168\" fill=\"#D4D4D4\"> </tspan><tspan x=\"189\" fill=\"#4FC1FF\">G8</tspan><tspan x=\"231\" fill=\"#D4D4D4\">++;</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 18,
+      "code": "{\n  return H6(u6);\n}",
+      "svg": "<svg viewBox=\"0 0 504 257.59999999999997\" width=\"504\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"504\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#C586C0\">return</tspan><tspan x=\"168\" fill=\"#D4D4D4\"> </tspan><tspan x=\"189\" fill=\"#DCDCAA\">H6</tspan><tspan x=\"231\" fill=\"#D4D4D4\">(</tspan><tspan x=\"252\" fill=\"#9CDCFE\">u6</tspan><tspan x=\"294\" fill=\"#D4D4D4\">);</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 13,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-8, 8).N0jkgX(0, 7));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">8</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">8</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">7</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 19,
+      "code": "{\n  I5.L_zBkB0 = H6;\n}",
+      "svg": "<svg viewBox=\"0 0 546 257.59999999999997\" width=\"546\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"546\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">I5</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">L_zBkB0</tspan><tspan x=\"252\" fill=\"#D4D4D4\"> </tspan><tspan x=\"273\" fill=\"#D4D4D4\">= </tspan><tspan x=\"315\" fill=\"#4FC1FF\">H6</tspan><tspan x=\"357\" fill=\"#D4D4D4\">;</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 1,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-7, 7).N0jkgX(0, 6));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">7</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">7</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">6</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 3,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-5, 5).N0jkgX(0, 4));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">5</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">5</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">4</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 9,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 11,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-7, 7).N0jkgX(0, 5));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">7</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">7</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">5</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 2,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 8,
+      "code": "{\n  P6.l8Ms_3.o3QaKx(P6, P6.N0jkgX(-3, 3).N0jkgX(0, 1));\n}",
+      "svg": "<svg viewBox=\"0 0 1302 257.59999999999997\" width=\"1302\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"1302\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">l8Ms_3</tspan><tspan x=\"231\" fill=\"#D4D4D4\">.</tspan><tspan x=\"252\" fill=\"#DCDCAA\">o3QaKx</tspan><tspan x=\"378\" fill=\"#D4D4D4\">(</tspan><tspan x=\"399\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"441\" fill=\"#D4D4D4\">, </tspan><tspan x=\"483\" fill=\"#4FC1FF\">P6</tspan><tspan x=\"525\" fill=\"#D4D4D4\">.</tspan><tspan x=\"546\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"672\" fill=\"#D4D4D4\">(-</tspan><tspan x=\"714\" fill=\"#B5CEA8\">3</tspan><tspan x=\"735\" fill=\"#D4D4D4\">, </tspan><tspan x=\"777\" fill=\"#B5CEA8\">3</tspan><tspan x=\"798\" fill=\"#D4D4D4\">).</tspan><tspan x=\"840\" fill=\"#DCDCAA\">N0jkgX</tspan><tspan x=\"966\" fill=\"#D4D4D4\">(</tspan><tspan x=\"987\" fill=\"#B5CEA8\">0</tspan><tspan x=\"1008\" fill=\"#D4D4D4\">, </tspan><tspan x=\"1050\" fill=\"#B5CEA8\">1</tspan><tspan x=\"1071\" fill=\"#D4D4D4\">));</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 12,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 17,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    }
+  ],
+  "edges": [
+    [
+      20,
+      5
+    ],
+    [
+      7,
+      6
+    ],
+    [
+      7,
+      14
+    ],
+    [
+      4,
+      3
+    ],
+    [
+      4,
+      9
+    ],
+    [
+      10,
+      20
+    ],
+    [
+      10,
+      19
+    ],
+    [
+      14,
+      13
+    ],
+    [
+      14,
+      12
+    ],
+    [
+      6,
+      5
+    ],
+    [
+      13,
+      5
+    ],
+    [
+      19,
+      18
+    ],
+    [
+      1,
+      5
+    ],
+    [
+      3,
+      5
+    ],
+    [
+      9,
+      8
+    ],
+    [
+      9,
+      7
+    ],
+    [
+      11,
+      5
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      8,
+      5
+    ],
+    [
+      12,
+      11
+    ],
+    [
+      12,
+      10
+    ]
+  ],
+  "steps": [
+    {
+      "nodesDeleted": [
+        18
+      ],
+      "edgesAdded": [],
+      "editedNodes": [
+        {
+          "id": 19,
+          "code": "{\n  I5.L_zBkB0 = H6;\n  return H6(u6);\n}",
+          "svg": "<svg viewBox=\"0 0 546 289.79999999999995\" width=\"546\" height=\"289.79999999999995\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"546\" height=\"289.79999999999995\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#4FC1FF\">I5</tspan><tspan x=\"84\" fill=\"#D4D4D4\">.</tspan><tspan x=\"105\" fill=\"#9CDCFE\">L_zBkB0</tspan><tspan x=\"252\" fill=\"#D4D4D4\"> </tspan><tspan x=\"273\" fill=\"#D4D4D4\">= </tspan><tspan x=\"315\" fill=\"#4FC1FF\">H6</tspan><tspan x=\"357\" fill=\"#D4D4D4\">;</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#C586C0\">return</tspan><tspan x=\"168\" fill=\"#D4D4D4\"> </tspan><tspan x=\"189\" fill=\"#DCDCAA\">H6</tspan><tspan x=\"231\" fill=\"#D4D4D4\">(</tspan><tspan x=\"252\" fill=\"#9CDCFE\">u6</tspan><tspan x=\"294\" fill=\"#D4D4D4\">);</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"128.79999999999998\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+        }
+      ],
+      "type": "Linear"
+    },
+    {
+      "nodesDeleted": [
+        17
+      ],
+      "edgesAdded": [],
+      "editedNodes": [],
+      "type": "Floating"
+    }
+  ]
+}

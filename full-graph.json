@@ -1,0 +1,26 @@
+{
+  "startCase": 2,
+  "cases": [
+    {
+      "id": 2,
+      "code": "{\n  return .5 - K_0X3E.t6owL1();\n}",
+      "svg": "<svg viewBox=\"0 0 819 257.59999999999997\" width=\"819\" height=\"257.59999999999997\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"819\" height=\"257.59999999999997\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">  </tspan><tspan x=\"42\" fill=\"#C586C0\">return</tspan><tspan x=\"168\" fill=\"#D4D4D4\"> </tspan><tspan x=\"189\" fill=\"#B5CEA8\">0.5</tspan><tspan x=\"252\" fill=\"#D4D4D4\"> </tspan><tspan x=\"273\" fill=\"#D4D4D4\">- </tspan><tspan x=\"315\" fill=\"#4FC1FF\">K_0X3E</tspan><tspan x=\"441\" fill=\"#D4D4D4\">.</tspan><tspan x=\"462\" fill=\"#DCDCAA\">t6owL1</tspan><tspan x=\"588\" fill=\"#D4D4D4\">();</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"96.6\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    },
+    {
+      "id": 1,
+      "code": "{}",
+      "svg": "<svg viewBox=\"0 0 189 225.39999999999998\" width=\"189\" height=\"225.39999999999998\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect id=\"bg\" fill=\"#1E1E1E\" width=\"189\" height=\"225.39999999999998\" rx=\"12\"></rect><g id=\"tokens\" transform=\"translate(84, 64.39999999999999)\"><text font-family=\"Consolas\" font-size=\"24\" y=\"32.199999999999996\">\n<tspan x=\"0\" fill=\"#D4D4D4\">{</tspan>\n</text>\n<text font-family=\"Consolas\" font-size=\"24\" y=\"64.39999999999999\">\n<tspan x=\"0\" fill=\"#D4D4D4\">}</tspan>\n</text></g>\n</svg>\n"
+    }
+  ],
+  "edges": [],
+  "steps": [
+    {
+      "nodesDeleted": [
+        1
+      ],
+      "edgesAdded": [],
+      "editedNodes": [],
+      "type": "Floating"
+    }
+  ]
+}

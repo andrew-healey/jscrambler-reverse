@@ -1,6 +1,12 @@
 window.onload = async () => {
+  const isLocal = document.location.hostname === 'localhost';
+  const isSwitched = new URLSearchParams(document.location.search).has(
+    'switched',
+  );
+  const getFull = isLocal == isSwitched;
+
   const { startCase, cases, edges, steps } = await (
-    await fetch('graph.json')
+    await fetch((getFull ? 'full' : 'partial') + '-graph.json')
   ).json();
 
   let currStep = 0;
@@ -151,8 +157,6 @@ window.onload = async () => {
       currStep++;
     }
 
-    console.log(nodesArray, nodes.data(), editedNodes);
-
     simulation.nodes(nodesArray);
 
     simulation.force(
@@ -175,7 +179,6 @@ window.onload = async () => {
           -1,
       )
       .html((node) => {
-        console.log('modifying', node.id);
         const editRecord = editedNodes.find(
           (editRecord) => editRecord.id == node.id,
         );
