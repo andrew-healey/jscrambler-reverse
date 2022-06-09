@@ -168,7 +168,7 @@ const reduceCases = (cases, stateName, startVal) => {
         nodesDeleted: [aCase.id],
         edgesAdded: [],
         editedNodes: [],
-        type: 'Floating',
+        type: 'Dead Code',
       };
     }
 
@@ -193,7 +193,7 @@ const reduceCases = (cases, stateName, startVal) => {
           nodesDeleted,
           edgesAdded: newEdges,
           editedNodes: [aCase],
-          type: 'Linear',
+          type: 'Sequential Statement',
         };
       }
     }
@@ -224,7 +224,7 @@ const reduceCases = (cases, stateName, startVal) => {
           nodesDeleted,
           edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
           editedNodes: [aCase],
-          type: 'If/else',
+          type: 'If-Else Statement',
         };
       }
 
@@ -249,7 +249,7 @@ const reduceCases = (cases, stateName, startVal) => {
           nodesDeleted,
           edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
           editedNodes: [aCase],
-          type: 'If',
+          type: 'If Statement',
         };
       }
 
@@ -273,7 +273,7 @@ const reduceCases = (cases, stateName, startVal) => {
             nodesDeleted,
             edgesAdded: [],
             editedNodes: [aCase],
-            type: 'While',
+            type: 'While Loop',
           };
         }
 
@@ -291,7 +291,7 @@ const reduceCases = (cases, stateName, startVal) => {
             nodesDeleted,
             edgesAdded: [[cons.id, alt.id]],
             editedNodes: [cons],
-            type: 'DoWhile',
+            type: 'Do-While Loop',
           };
         }
       }

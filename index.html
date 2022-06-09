@@ -13,7 +13,10 @@
       }
       #main {
         overflow: hidden;
-        position: relative;
+        position: fixed;
+				width:80vw;
+				right:0px;
+				top:0px;
       }
       .nodes .circle circle {
         fill: #1E1E1E;
@@ -30,6 +33,61 @@
         stroke: red;
         stroke-width:5px;
       }
+
+			.bar {
+
+				display:block;
+				position:fixed;
+				left:0px;
+				top:0px;
+				height:100vh;
+				width:20vw;
+				background:darkgray;
+
+				font-family: Helvetica, sans-serif;
+				font-size:1.25em;
+
+				padding:10px;
+
+				overflow:auto;
+			}
+
+			.bar * {
+				padding-top:10px;
+			}
+
+			.title {
+				font-size: 3em;
+			}
+
+			.subtitle {
+				font-size: 1.5em;
+				color:darkslategray;
+			}
+
+			.narration {
+			}
+
+			.op {
+				border-top:black 1px solid;
+			}
+			.op:last-child {
+				padding-bottom:10px;
+				border-bottom:black 1px solid;
+			}
+
+			.op-title {
+				font-size:1em;
+				text-decoration: solid;
+			}
+			.op-desc {
+				font-size:0.8em;
+				color:darkslategray;
+			}
+
+			.op.current {
+				background:lightgray;
+			}
     </style>
   </head>
   <body>
@@ -39,5 +97,10 @@
         <svg id="svg"></svg>
       </div>
     </div>
+		<div class="bar">
+			<div class="title">JUnscrambler</div>
+			<div class="subtitle">Reversing JScrambler's signature control flow obfuscation</div>
+			<div class="narration"></div>
+		</div>
     <script src="viz.js"></script>
   </body>
