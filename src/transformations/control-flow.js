@@ -404,6 +404,8 @@ const deepenFlow = (sess) => {
       cases: bareCases,
       edges: bareEdges,
       steps: allReplacements,
+      code: fullBlock,
+      svg: scarbon(fullBlock),
     };
 
     const serialized = JSON.stringify(saveObj, null, 2);
