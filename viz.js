@@ -42,9 +42,9 @@ window.onload = async () => {
 
   makeArrays();
 
-  const markerBoxWidth = 10;
-  const markerBoxHeight = 10;
-  const refX = markerBoxWidth / 2 + rad / 2;
+  const markerBoxWidth = 5;
+  const markerBoxHeight = 5;
+  const refX = markerBoxWidth*3;
   const refY = markerBoxHeight / 2;
   const markerHeight = markerBoxWidth / 2;
   const markerWidth = markerBoxHeight / 2;
@@ -73,7 +73,8 @@ window.onload = async () => {
     .attr('orient', 'auto-start-reverse')
     .append('path')
     .attr('d', d3.line()(arrowPoints))
-    .attr('stroke', 'black');
+		.attr('fill','white')
+    .attr('stroke', 'white');
 
   svg.attr('width', width).attr('height', height);
 
@@ -92,7 +93,7 @@ window.onload = async () => {
     .forceSimulation(nodesArray)
     .force(
       'charge',
-      d3.forceManyBody().strength((node) => getRadius(node) * -10),
+      d3.forceManyBody().strength((node) => getRadius(node) * -15),
     )
     .force(
       'link',
@@ -116,8 +117,8 @@ window.onload = async () => {
     .attr('width', width)
     .attr('height', height)
     .attr('fill', '#ccc');
-  const g_links = svg.append('g').attr('class', 'links');
   const g_nodes = svg.append('g').attr('class', 'nodes');
+  const g_links = svg.append('g').attr('class', 'links');
 
   let links;
 
@@ -183,7 +184,7 @@ window.onload = async () => {
         )
         .strength(1),
     );
-    simulation.alpha(1);
+    simulation.alpha(1.5);
     simulation.restart();
     renderMethod();
 
