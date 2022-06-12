@@ -5,18 +5,56 @@ window.onload = async () => {
   );
   const getFull = isLocal == isSwitched;
 
+	const narration = document.querySelector(".narration");
+
+	const setOps = async ()=>{
+		const els = steps.map((step,idx)=>{
+			const {type,nodesDeleted,edgesAdded,editedNodes}=step;
+			const title=`${idx+1}. Detected ${type}`;
+			const desc=editedNodes.length?`Merge ${nodesDeleted} into ${editedNodes.map(node=>node.id)}`:`Deleted ${nodesDeleted}`;
+
+			const titleEl=document.createElement("div");
+			titleEl.classList.add("op-title");
+			titleEl.innerText=title;
+
+			const descEl=document.createElement("div");
+			descEl.classList.add("op-desc");
+			descEl.innerText=desc;
+
+			const op=document.createElement("div");
+			op.classList.add("op");
+			op.appendChild(titleEl);
+			op.appendChild(descEl);
+
+			if(idx==0){
+				op.classList.add("current");
+			}
+
+			return op;
+
+		});
+		narration.innerHTML="";
+		for(let el of els){
+			await new Promise(res=>setTimeout(res,1000));
+			narration.appendChild(el);
+		}
+	};
+
   const { startCase, cases, edges, steps } = await (
     await fetch((getFull ? 'full' : 'partial') + '-graph.json')
   ).json();
+
+	setOps();
 
   let currStep = 0;
 
   const svg = d3.select('svg');
 
-  const width = window.innerWidth;
+  const width = window.innerWidth*0.8;
   const height = window.innerHeight;
 
   const rad = 30;
+	let sizeMultiplier=1;
   const linesRatio = 5;
   const dist = 3;
   const charge = (rad + 10) * -20;
@@ -24,7 +62,7 @@ window.onload = async () => {
   let nodesArray, linksArray;
 
   const getRadius = (node) =>
-    rad + Math.floor(node.code.split('\n').length * linesRatio) + 2;
+    sizeMultiplier*(rad + Math.floor(node.code.split('\n').length * linesRatio) + 2);
 
   const makeArrays = () => {
     nodesArray = cases.map((oneCase) => ({
@@ -102,7 +140,7 @@ window.onload = async () => {
         .id((node) => node.id)
         .distance(
           (link) =>
-            (dist * (getRadius(link.source) + getRadius(link.target))) / 2,
+            (dist * Math.max(getRadius(link.source) , getRadius(link.target))),
         )
         .strength(1),
     )
@@ -117,8 +155,8 @@ window.onload = async () => {
     .attr('width', width)
     .attr('height', height)
     .attr('fill', '#ccc');
-  const g_nodes = svg.append('g').attr('class', 'nodes');
   const g_links = svg.append('g').attr('class', 'links');
+  const g_nodes = svg.append('g').attr('class', 'nodes');
 
   let links;
 
@@ -144,7 +182,6 @@ window.onload = async () => {
       const { nodesDeleted, edgesAdded, editedNodes } = steps[currStep];
 
       nodesArray.forEach((node) => {
-        console.log(node);
         const editRecord = editedNodes.find((record) => record.id === node.id);
         if (editRecord) {
           node.code = editRecord.code;
@@ -170,6 +207,14 @@ window.onload = async () => {
       ];
       currStep++;
     }
+
+		const htmlOps = [...document.querySelectorAll(".op")];
+		htmlOps.forEach((el,idx)=>{
+			el.classList.remove("current");
+			if(idx===currStep){
+				el.classList.add("current");
+			}
+		})
 
     simulation.nodes(nodesArray);
 
@@ -210,6 +255,9 @@ window.onload = async () => {
       .attr('stroke', (node) =>
         steps[currStep]?.nodesDeleted?.includes?.(node.id) ? 'red' : 'blue',
       );
+
+
+
   };
 
   const dragStarted = (node) => {
@@ -321,4 +369,5 @@ window.onload = async () => {
     update_links.exit().remove();
     links = makeLinks(update_links).merge(update_links);
   };
+
 };
