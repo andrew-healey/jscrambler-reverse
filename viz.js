@@ -11,7 +11,7 @@ window.onload = async () => {
 		const els = steps.map((step,idx)=>{
 			const {type,nodesDeleted,edgesAdded,editedNodes}=step;
 			const title=`${idx+1}. Detected ${type}`;
-			const desc=editedNodes.length?`Merge ${nodesDeleted} into ${editedNodes.map(node=>node.id)}`:`Deleted ${nodesDeleted}`;
+			const desc=editedNodes.length?`Merge ${nodesDeleted} into ${editedNodes.map(node=>node.id)}`:`Delete ${nodesDeleted}`;
 
 			const titleEl=document.createElement("div");
 			titleEl.classList.add("op-title");
@@ -57,7 +57,6 @@ window.onload = async () => {
 	let sizeMultiplier=1;
   const linesRatio = 5;
   const dist = 3;
-  const charge = (rad + 10) * -20;
 
   let nodesArray, linksArray;
 
