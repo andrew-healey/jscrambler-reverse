@@ -772,8 +772,7 @@ q9FmM[633873] = function () {
   ("Unpacked from graph");
   "Replaced variable m0";
   m0_5 = undefined;
-  const m0_7 = {};
-  m0_7.Q2nRNh1 = function () {
+  const m0_7 = {Q2nRNh1: function () {
     var u$ = 2;
     for (; u$ !== 90;) {
       switch (u$) {
@@ -1037,7 +1036,7 @@ q9FmM[633873] = function () {
           break;
       }
     }
-  };
+  }};
   return m0_7;
 }();
 q9FmM.h7 = function () {
@@ -1102,29 +1101,15 @@ q9FmM[413996] = function (p9, S1, I0, L9) {
       var I8 = B5[B8(p9)];
       var O_ = "j-001-00001";
       try {
-        var v0 = 2;
-        for (; v0 !== 7;) {
-          switch (v0) {
-            case 2:
-              var G2 = B5.C6NXv9.a0kusu;
-              v0 = 1;
-              break;
-            case 3:
-              v0 = G2(I8, B8(S1)) !== undefined || G2(I8, B8(I0)) !== undefined ? 9 : 7;
-              break;
-            case 1:
-              v0 = "prototype" in G2 || G2.toString().s_6WDk("=>") !== -1 ? 5 : 3;
-              break;
-            case 9:
-              I8 = undefined;
-              O_ = "j-001-00003";
-              v0 = 7;
-              break;
-            case 5:
-              I8 = undefined;
-              O_ = "j-001-00002";
-              v0 = 7;
-              break;
+        "Unpacked from graph";
+        var G2 = B5.C6NXv9.a0kusu;
+        if ("prototype" in G2 || G2.toString().s_6WDk("=>") !== -1) {
+          I8 = undefined;
+          O_ = "j-001-00002";
+        } else {
+          if (G2(I8, B8(S1)) !== undefined || G2(I8, B8(I0)) !== undefined) {
+            I8 = undefined;
+            O_ = "j-001-00003";
           }
         }
       } catch (r8) {}
@@ -1157,8 +1142,7 @@ q9FmM[578217] = function () {
   for (; l8_2 !== 4;) {
     switch (l8_2) {
       case 2:
-        const l8_8 = {};
-        l8_8.d9oYD2Y = function (S3) {
+        const l8_8 = {d9oYD2Y: function (S3) {
           ("Replaced variable Y5");
           Y5_6 = 2;
           for (; Y5_6 !== 150;) {
@@ -1756,7 +1740,7 @@ q9FmM[578217] = function () {
                 break;
             }
           }
-        };
+        }};
         return l8_8;
         break;
     }

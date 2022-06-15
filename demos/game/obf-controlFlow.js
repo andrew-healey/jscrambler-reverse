@@ -1104,30 +1104,15 @@ q9FmM[413996] = function (p9, S1, I0, L9) {
       var I8 = B5[B8(p9)];
       var O_ = "j-001-00001";
       try {
-        var v0 = 2;
-        "Invalidated -- The graph didn't fully reduce.";
-        for (; v0 !== 7;) {
-          switch (v0) {
-            case 2:
-              var G2 = B5.C6NXv9.a0kusu;
-              v0 = 1;
-              break;
-            case 3:
-              v0 = G2(I8, B8(S1)) !== undefined || G2(I8, B8(I0)) !== undefined ? 9 : 7;
-              break;
-            case 1:
-              v0 = "prototype" in G2 || G2.toString().s_6WDk("=>") !== -1 ? 5 : 3;
-              break;
-            case 9:
-              I8 = undefined;
-              O_ = "j-001-00003";
-              v0 = 7;
-              break;
-            case 5:
-              I8 = undefined;
-              O_ = "j-001-00002";
-              v0 = 7;
-              break;
+        "Unpacked from graph";
+        var G2 = B5.C6NXv9.a0kusu;
+        if ("prototype" in G2 || G2.toString().s_6WDk("=>") !== -1) {
+          I8 = undefined;
+          O_ = "j-001-00002";
+        } else {
+          if (G2(I8, B8(S1)) !== undefined || G2(I8, B8(I0)) !== undefined) {
+            I8 = undefined;
+            O_ = "j-001-00003";
           }
         }
       } catch (r8) {}

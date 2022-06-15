@@ -1,4 +1,6 @@
 import assert from "node:assert";
+import { is } from "../assert-utils.js";
+import * as Shift from "shift-ast";
 
 export const demo = `
 	q9FmM[633873] = function () {
@@ -15,26 +17,54 @@ export const demo = `
 
 export default (sess) => {
   const allObjVars = sess(
-    `VariableDeclaration[kind=const] > VariableDeclarator[init.type=ObjectExpression] > BindingIdentifier`
+    `VariableDeclaration[kind=const] > VariableDeclarator[init.type=ObjectExpression][init.properties.length=0] > BindingIdentifier`
   );
+
+	let assignStatements=[];
 
   allObjVars.forEach((objVar) => {
     const variable = sess(objVar).lookupVariable()[0];
-    console.log(variable);
-
     const { declarations, references } = variable;
 
-
-    console.log(references.map((ref) => [ref.accessibility,sess(ref.node).parents().parents().print()]));
-
-    if (declarations.length !== 0) return;
     const writers = references.filter((ref) => ref.accessibility.isWrite);
 
-    if (writers.length > 0) {
-      return;
-    }
+    if (declarations.length === 1 && writers.length === 1) {
+      const nodes = sess(references.map((ref) => ref.node));
+      const parents = nodes.parents();
 
-    assert.fail("Not implemented");
+      const propSetters = parents.filter(
+        (parent) => parent.type === "StaticMemberAssignmentTarget"
+      );
+
+      const assignExps = propSetters.parents();
+
+      const objectProps = assignExps.map((exp) => {
+        is(exp, "AssignmentExpression");
+        const { binding, expression } = exp;
+        is(binding, "StaticMemberAssignmentTarget");
+        const { property } = binding;
+        return [property, expression];
+      });
+
+
+      const newObj = new Shift.ObjectExpression({
+        properties: objectProps.map(
+          ([property, expression]) =>
+            new Shift.DataProperty({
+              name: new Shift.StaticPropertyName({
+								value:property
+							}),
+              expression,
+            })
+        ),
+      });
+			assignStatements=[...assignStatements,...assignExps.parents().nodes];
+
+			const $objVar = sess(objVar); // BindingIdentifier
+			const $declarator = $objVar.parents();
+			const $objExpr=$declarator("ObjectExpression");
+			$objExpr.replace(newObj);
+    }
   });
-  assert.fail("No var decls found");
+	sess(assignStatements).delete();
 };
