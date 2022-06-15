@@ -1,1 +1,6 @@
 node_modules/
+
+beautified.js
+case-block.js
+graphs/*.json
+demos/**/obf-*.js

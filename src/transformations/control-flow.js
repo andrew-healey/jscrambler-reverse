@@ -279,7 +279,6 @@ const reduceCases = (cases, stateName, startVal) => {
       }
 
       if (
-        countParents(alt, cases) == 2 &&
         countParents(cons, cases) == 1 &&
         cons.children.length == 1 &&
         cons.children[0] == alt.id
@@ -288,16 +287,16 @@ const reduceCases = (cases, stateName, startVal) => {
           test: aCase.conditional,
           consequent: makeBlock(cons),
         });
-        aCase.statements = [...aCase.statements, finalIf, ...alt.statements];
-        aCase.children = alt.children;
+        aCase.statements = [...aCase.statements, finalIf];
+        aCase.children = cons.children;
 
         aCase.conditional = undefined;
 
-        const nodesDeleted = deleteNodes(cases, [cons.id, alt.id]);
+        const nodesDeleted = deleteNodes(cases, [cons.id]);
 
         return {
           nodesDeleted,
-          edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
+          edgesAdded: [],
           editedNodes: [aCase],
           type: "If Statement",
         };
@@ -515,6 +514,7 @@ const deepenFlow = (sess,idx) => {
     // Save record of modifications to a JSON file.
     const save = (done) => {
       const saveObj = {
+				done,
         startCase: startVal,
         cases: bareCases,
         edges: bareEdges,
@@ -525,7 +525,11 @@ const deepenFlow = (sess,idx) => {
       const serialized = JSON.stringify(saveObj, null, 2);
 
       writeFileSync((done ? "full" : "partial") + "-graph.json", serialized);
-      writeFileSync("./graphs/"+idx+".json", serialized);
+			const partialSave="./graphs/"+idx+".json";
+			if(done) rimraf.sync(partialSave);
+
+			const whichSave = done?`./graphs/done-${idx}.json`:partialSave;
+      writeFileSync(whichSave, serialized);
     };
 
     save(false);
@@ -564,9 +568,9 @@ const deepenFlow = (sess,idx) => {
       save(false);
     }
 
-    assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
+    assert.equal(allCases.length, 1, `The graph didn't fully reduce. IDX ${idx}, IDs ${JSON.stringify(allCases.map(aCase=>aCase.id))}`);
 
-    if (numOps > 4) save(true);
+    save(true);
 
     const [finalCase] = allCases;
     assert.equal(finalCase.children.length, 0);

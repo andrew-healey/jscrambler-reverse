@@ -58,10 +58,12 @@ window.onload = async () => {
   const linesRatio = 5;
   const dist = 3;
 
+	const maxLines=100;
+
   let nodesArray, linksArray;
 
   const getRadius = (node) =>
-    sizeMultiplier*(rad + Math.floor(node.code.code.split('\n').length * linesRatio) + 2);
+    sizeMultiplier*(rad + Math.floor( Math.min(node.code.code.split('\n').length,maxLines) * linesRatio) + 2);
 
   const makeArrays = () => {
     nodesArray = cases.map((oneCase) => ({
@@ -80,7 +82,7 @@ window.onload = async () => {
 
   const markerBoxWidth = 5;
   const markerBoxHeight = 5;
-  const refX = markerBoxWidth*3;
+  const refX = "center";
   const refY = markerBoxHeight / 2;
   const markerHeight = markerBoxWidth / 2;
   const markerWidth = markerBoxHeight / 2;
@@ -162,7 +164,8 @@ window.onload = async () => {
     someLinks
       .enter()
       .append('line')
-      .attr('marker-end', 'url(#arrow)')
+			.attr('stroke-dasharray','40 20 10')
+      //.attr('marker-end', 'url(#arrow)')
       .attr('x1', (edge) => edge.source.x)
       .attr('y1', (edge) => edge.source.y)
       .attr('x2', (edge) => edge.target.x)

@@ -4,13 +4,14 @@ import unminify from "./transformations/unminify.js";
 import arrayVars from "./transformations/array-vars.js";
 import createDeclarations from "./transformations/create-declarations.js";
 import objectSplit from "./transformations/object-split.js";
+import whileToFor from "./transformations/while-to-for.js";
 
 import {readFileSync,writeFileSync} from "fs";
 
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
-let skip="";
+let skip="unminify";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -37,11 +38,13 @@ runTransform(arrayVars,"arrayVars");
 
 runTransform(createDeclarations,"createDeclarations");
 
-runTransform(objectSplit,"objectSplit");
+//runTransform(objectSplit,"objectSplit");
 
 runTransform(controlFlow,"controlFlow_2");
 
 runTransform(unminify,"unminify");
+
+runTransform(whileToFor,"whileToFor");
 
 //runTransform(unknown,"unknown");
 
