@@ -11,7 +11,7 @@ import {readFileSync,writeFileSync} from "fs";
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
-let skip="createDeclarations";
+let skip="unminify";
 
 const file=skip===""?"obf":"obf-"+skip;
 
