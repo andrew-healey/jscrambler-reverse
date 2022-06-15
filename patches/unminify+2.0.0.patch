@@ -1,0 +1,13 @@
+diff --git a/node_modules/unminify/src/transforms/wildly-unsafe/inline.js b/node_modules/unminify/src/transforms/wildly-unsafe/inline.js
+index 7849842..41015f7 100644
+--- a/node_modules/unminify/src/transforms/wildly-unsafe/inline.js
++++ b/node_modules/unminify/src/transforms/wildly-unsafe/inline.js
+@@ -90,7 +90,7 @@ module.exports = function inline(ast) {
+     if (init.type === 'IdentifierExpression') {
+       const indirectVars = lookup.lookup(init);
+       if (indirectVars.length === 1 && isConstantVariable(indirectVars[0])) {
+-        return new Shift.IdentifierExpression(init);
++        return new Shift.IdentifierExpression({name:init.name});
+       }
+     }
+     if (!inlinable.includes(init.type)) return null;

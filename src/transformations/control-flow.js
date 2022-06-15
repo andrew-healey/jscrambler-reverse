@@ -1,14 +1,41 @@
-import assert from 'node:assert';
-import { is } from '../assert-utils.js';
-import { codeGen } from 'shift-codegen';
-import { refactor } from 'shift-refactor';
-import { writeFileSync } from 'node:fs';
-import Shift from 'shift-ast';
-import Scarbon from 'scarbon';
+import assert from "node:assert";
+import { is } from "../assert-utils.js";
+import { codeGen } from "shift-codegen";
+import { refactor } from "shift-refactor";
+import { writeFileSync } from "node:fs";
+import Shift from "shift-ast";
+import Scarbon from "scarbon";
+import shiki from "shiki";
+import rimraf from "rimraf";
 
-const countParents = ({ id }, cases) => {
-  return cases.filter((aCase) => aCase.children.includes(id)).length;
+const terminalWhitelist = ["ThrowStatement", "ReturnStatement"];
+const isTerminal = (node) => {
+  const lastStatement = node.statements[node.statements.length - 1];
+  return terminalWhitelist.includes(lastStatement.type);
 };
+
+const parentsCache = new WeakMap();
+const getParents = ({ id }, cases) => {
+  /*
+  if (!parentsCache.has(cases))
+    parentsCache.set(
+      cases,
+			cases.reduce((parentMap,nextCase)=>{
+				for(let child of nextCase.children){
+					if(!(child in parentMap)){
+						parentMap[child]=[];
+					}
+					parentMap[child].push(nextCase);
+					return parentMap;
+				}
+			},{})
+		);
+	return parentsCache.get(cases)[id];
+	*/
+  return cases.filter((aCase) => aCase.children.includes(id));
+};
+
+const countParents = ({ id }, cases) => getParents({ id }, cases).length;
 
 const deleteNodes = (cases, idsToKill) => {
   idsToKill.forEach((id) => {
@@ -39,7 +66,16 @@ const makeBlock = (node) =>
     }),
   });
 
-const getCase = (id, cases) => cases.find((aCase) => aCase.id === id);
+let casesCache = new WeakMap();
+const getCase = (id, cases) => {
+  if (!casesCache.has(cases))
+    casesCache.set(
+      cases,
+      Object.fromEntries(cases.map((aCase) => [aCase.id, aCase]))
+    );
+
+  return casesCache.get(cases)[id];
+};
 
 const checkCase = (aCase, endVal) => {
   assert.notEqual(aCase.id, undefined);
@@ -49,18 +85,32 @@ const checkCase = (aCase, endVal) => {
     aCase.children.length == 2,
     "Unconditional nodes can't point to two children." +
       aCase.conditional +
-      aCase.children.length,
+      aCase.children.length
   );
 };
 
 const renderer = await new Scarbon({
-  lang: 'js',
+  lang: "js",
 });
 const scarbon = (code) => {
   const svg = renderer.svg(code);
-  const dataUrl = `data:image/svg+xml;utf8,${svg.replace(/$\s/gm, ' ')}`;
+  const dataUrl = `data:image/svg+xml;utf8,${svg.replace(/$\s/gm, " ")}`;
   return svg;
 };
+
+const shikiRenderer = await shiki.getHighlighter({
+  theme: "nord",
+});
+
+const html = (code) => {
+  return shikiRenderer.codeToHtml(code, { lang: "js" });
+};
+
+const render = (code) => ({
+  code,
+  svg: scarbon(code),
+  html: html(code),
+});
 
 const stringify = (statements) => {
   const newBlock = new Shift.Block({
@@ -79,20 +129,20 @@ const stringify = (statements) => {
 const makeCase = (shiftCase, stateName) => {
   const { test, consequent } = shiftCase;
 
-  is(test, 'LiteralNumericExpression');
+  is(test, "LiteralNumericExpression");
 
   const id = test.value;
 
   assert.notEqual(consequent.length, 0);
 
-  is(consequent[consequent.length - 1], 'BreakStatement');
+  is(consequent[consequent.length - 1], "BreakStatement");
 
   const statements = consequent.slice(0, consequent.length - 1);
 
   assert.notEqual(statements.length, 0);
 
   const lastStatement = statements[statements.length - 1];
-  if (lastStatement.type === 'ReturnStatement') {
+  if (lastStatement.type === "ReturnStatement") {
     return {
       id,
       statements,
@@ -101,18 +151,18 @@ const makeCase = (shiftCase, stateName) => {
     };
   }
 
-  is(lastStatement, 'ExpressionStatement');
+  is(lastStatement, "ExpressionStatement");
   const assignExp = lastStatement.expression;
-  is(assignExp, 'AssignmentExpression');
+  is(assignExp, "AssignmentExpression");
 
   const { binding, expression } = assignExp;
 
-  is(binding, 'AssignmentTargetIdentifier');
+  is(binding, "AssignmentTargetIdentifier");
   assert.equal(binding.name, stateName);
 
   const prevStatements = statements.slice(0, statements.length - 1);
 
-  if (expression.type === 'LiteralNumericExpression') {
+  if (expression.type === "LiteralNumericExpression") {
     // Simple linear step.
     return {
       id,
@@ -122,12 +172,12 @@ const makeCase = (shiftCase, stateName) => {
     };
   }
 
-  if (expression.type === 'ConditionalExpression') {
+  if (expression.type === "ConditionalExpression") {
     const conditional = expression.test;
 
     const { consequent, alternate } = expression;
-    is(consequent, 'LiteralNumericExpression');
-    is(alternate, 'LiteralNumericExpression');
+    is(consequent, "LiteralNumericExpression");
+    is(alternate, "LiteralNumericExpression");
 
     return {
       id,
@@ -168,7 +218,7 @@ const reduceCases = (cases, stateName, startVal) => {
         nodesDeleted: [aCase.id],
         edgesAdded: [],
         editedNodes: [],
-        type: 'Dead Code',
+        type: "Dead Code",
       };
     }
 
@@ -193,7 +243,7 @@ const reduceCases = (cases, stateName, startVal) => {
           nodesDeleted,
           edgesAdded: newEdges,
           editedNodes: [aCase],
-          type: 'Sequential Statement',
+          type: "Sequential Statement",
         };
       }
     }
@@ -224,7 +274,7 @@ const reduceCases = (cases, stateName, startVal) => {
           nodesDeleted,
           edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
           editedNodes: [aCase],
-          type: 'If-Else Statement',
+          type: "If-Else Statement",
         };
       }
 
@@ -249,7 +299,7 @@ const reduceCases = (cases, stateName, startVal) => {
           nodesDeleted,
           edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
           editedNodes: [aCase],
-          type: 'If Statement',
+          type: "If Statement",
         };
       }
 
@@ -273,7 +323,7 @@ const reduceCases = (cases, stateName, startVal) => {
             nodesDeleted,
             edgesAdded: [],
             editedNodes: [aCase],
-            type: 'While Loop',
+            type: "While Loop",
           };
         }
 
@@ -291,9 +341,69 @@ const reduceCases = (cases, stateName, startVal) => {
             nodesDeleted,
             edgesAdded: [[cons.id, alt.id]],
             editedNodes: [cons],
-            type: 'Do-While Loop',
+            type: "Do-While Loop",
           };
         }
+      }
+    }
+
+    // Switch statements. Ignoring for now.
+    if (false && countParents(aCase, cases) > 2) {
+      const parents = getParents(aCase, cases);
+
+      if (
+        parents.findIndex(
+          (parent) =>
+            parent.children.length !== 1 || countParents(parent, cases) !== 1
+        ) == -1
+      ) {
+        const decisionNodes = parents.map(
+          (parent) => getParents(parent, cases)[0]
+        );
+
+        // Order all decision nodes.
+
+        const decisionChains = [];
+        for (let decisionNode of decisionNodes) {
+          let parentChain = decisionChains.findIndex((chain) =>
+            chain[chain.length - 1].children.includes(decisionNode.id)
+          );
+
+          let proposedChain = [decisionNode];
+          if (parentChain >= 0) {
+            proposedChain = [
+              ...decisionChains.splice(parentChain, 1),
+              ...proposedChain,
+            ];
+          }
+
+          let childChain = decisionChains.find((chain) =>
+            decisionNode.children.includes(chain[0].id)
+          );
+
+          if (childChain >= 0) {
+            proposedChain = [
+              ...proposedChain,
+              ...decisionChains.splice(childChain, 1),
+            ];
+          }
+
+          decisionChains.push(proposedChain);
+        }
+        const [orderedChain] = decisionChains;
+
+        const lastNode = orderedChain[orderedChain.length - 1];
+        const defaultNode = lastNode.children[1];
+        assert(
+          (defaultNode.children.length == 1 &&
+            defaultNode.children[0] === aCase.id) ||
+            (defaultNode.children.length == 0 && isTerminal(defaultNode)),
+          "The default node should go to post behavior. It does not."
+        );
+
+        const shiftCases = orderedChain.map((decisionNode) => {
+          const behaviorNode = getCase(decisionNode.children[0], parents);
+        });
       }
     }
   }
@@ -301,172 +411,196 @@ const reduceCases = (cases, stateName, startVal) => {
   // By default, return nothing.
 };
 
-const deepenFlow = (sess) => {
-  const switcher = sess(
-    `VariableDeclarationStatement:first-child + ForStatement > BlockStatement > Block > SwitchStatement`,
-  ).get(0);
-  is(switcher, 'SwitchStatement');
+const deepenFlow = (sess,idx) => {
+  let forLoop;
+  try {
+    const switcher = sess(
+      `:matches(VariableDeclarationStatement, ExpressionStatement[expression.type=AssignmentExpression]) + ForStatement > BlockStatement > Block > SwitchStatement`
+    ).get(0);
+    if (!switcher) return false;
+    is(switcher, "SwitchStatement");
 
-  if (!switcher) return false;
+    forLoop = sess(switcher).parents().parents().parents().get(0);
+    is(forLoop, "ForStatement");
 
-  const forLoop = sess(switcher).parents().parents().parents().get(0);
-  is(forLoop, 'ForStatement');
+    const containingBlock = sess(forLoop).parents().get(0); // Block-like object.
+    assert(
+      containingBlock.statements,
+      "Containing block has no statements. Not blocky. Type: " +
+        containingBlock?.type
+    );
 
-  const containingBlock = sess(forLoop).parents().get(0); // Block-like object.
-  assert(
-    containingBlock.statements,
-    'Containing block has no statements. Not blocky. Type: ' +
-      containingBlock?.type,
-  );
+    const fullBlock = sess(containingBlock).codegen()[0];
+    writeFileSync("case-block.js", fullBlock);
 
-  const fullBlock = sess(containingBlock).codegen()[0];
-  writeFileSync('case-block.js', fullBlock);
+    const statements = sess(containingBlock).statements().nodes;
 
-  const stateDeclSt = sess(containingBlock).statements().get(0);
-  is(stateDeclSt, 'VariableDeclarationStatement');
+		const startIdx=statements.indexOf(forLoop) - 1;
+    const stateDeclSt = statements[startIdx];
+    // Extract state information from the initial variable declaration or assignment.
+    const { binding, init } = (() => {
+      if (stateDeclSt.type === "ExpressionStatement") {
+        const { expression } = stateDeclSt;
+        is(expression, "AssignmentExpression");
+        const { binding, expression: init } = expression;
+        return { binding, init };
+      }
+      is(stateDeclSt, "VariableDeclarationStatement");
 
-  const decl = stateDeclSt.declaration;
-  assert.equal(decl.declarators.length, 1);
+      const decl = stateDeclSt.declaration;
+      assert.equal(decl.declarators.length, 1);
 
-  const stateVar = decl.declarators[0];
+      const stateVar = decl.declarators[0];
 
-  const { binding, init } = stateVar;
+      return stateVar;
+    })();
 
-  assert(binding);
-  assert(init);
+    assert(binding);
+    assert(init);
 
-  const stateName = binding.name;
-  const startVal = init.value;
+    const stateName = binding.name;
+    const startVal = init.value;
 
-  assert(stateName);
-  assert(startVal);
+    assert(stateName);
+    assert(startVal, "Start value is not a literal.");
 
-  const { test } = forLoop;
+    const { test } = forLoop;
 
-  is(test, 'BinaryExpression');
+    is(test, "BinaryExpression");
 
-  const { left, right } = test;
+    const { left, right } = test;
 
-  is(left, 'IdentifierExpression');
-  assert.equal(left.name, stateName);
+    is(left, "IdentifierExpression");
+    assert.equal(left.name, stateName);
 
-  is(right, 'LiteralNumericExpression');
+    is(right, "LiteralNumericExpression");
 
-  const endVal = right.value;
+    const endVal = right.value;
 
-  const { discriminant, cases } = switcher;
-  is(discriminant, 'IdentifierExpression');
-  assert.equal(discriminant.name, stateName);
+    const { discriminant, cases } = switcher;
+    is(discriminant, "IdentifierExpression");
+    assert.equal(discriminant.name, stateName);
 
-  /*
-   * type Case {
-   *   id:number;
-   *   statements:Shift.____Statement[];
-   *   conditional:Shift.____Expression;
-   *   children:number[];
-   * }
-   */
+    /*
+     * type Case {
+     *   id:number;
+     *   statements:Shift.____Statement[];
+     *   conditional:Shift.____Expression;
+     *   children:number[];
+     * }
+     */
 
-  const builtInCase = {
-    id: endVal,
-    statements: [],
-    children: [],
-  };
+    const builtInCase = {
+      id: endVal,
+      statements: [],
+      children: [],
+    };
 
-  const foundCases = cases.map((foundCase) =>
-    makeCase(foundCase, stateName, startVal),
-  );
+    const foundCases = cases.map((foundCase) =>
+      makeCase(foundCase, stateName, startVal)
+    );
 
-  const allCases = [...foundCases, builtInCase];
+    const allCases = [...foundCases, builtInCase];
 
-  // For logging purposes
-  const bareCases = allCases
-    .map((aCase) => ({
+    // For logging purposes
+    const bareCases = allCases.map((aCase) => ({
       id: aCase.id,
-      code: stringify(aCase.statements),
-    }))
-    .map((aCase) => {
-      const { code } = aCase;
-      return {
-        ...aCase,
-        svg: scarbon(code),
+      code: render(stringify(aCase.statements)),
+    }));
+    const bareEdges = allCases.flatMap(({ id, children }) =>
+      children.map((child) => [id, child])
+    );
+    const allReplacements = [];
+
+    // Save record of modifications to a JSON file.
+    const save = (done) => {
+      const saveObj = {
+        startCase: startVal,
+        cases: bareCases,
+        edges: bareEdges,
+        steps: allReplacements,
+        code: render(fullBlock),
       };
-    });
-  const bareEdges = allCases.flatMap(({ id, children }) =>
-    children.map((child) => [id, child]),
-  );
-  const allReplacements = [];
 
-  // Save record of modifications to a JSON file.
-  const save = (done) => {
-    const saveObj = {
-      startCase: startVal,
-      cases: bareCases,
-      edges: bareEdges,
-      steps: allReplacements,
-      code: fullBlock,
-      svg: scarbon(fullBlock),
+      const serialized = JSON.stringify(saveObj, null, 2);
+
+      writeFileSync((done ? "full" : "partial") + "-graph.json", serialized);
+      writeFileSync("./graphs/"+idx+".json", serialized);
     };
-
-    const serialized = JSON.stringify(saveObj, null, 2);
-
-    writeFileSync((done ? 'full' : 'partial') + '-graph.json', serialized);
-  };
-
-  save(false);
-
-  let numOps = 0;
-
-  while (true) {
-    const replacement = reduceCases(allCases, stateName, startVal);
-
-    if (!replacement) {
-      break;
-    }
-
-    numOps++;
-
-    const newEdits = replacement.editedNodes.map((node) => {
-      const code = stringify(node.statements);
-      const svg = scarbon(code);
-
-      return {
-        id: node.id,
-        code,
-        svg,
-      };
-    });
-
-    console.log(replacement.type);
-
-    const newReplacement = {
-      nodesDeleted: replacement.nodesDeleted,
-      edgesAdded: replacement.edgesAdded,
-      editedNodes: newEdits,
-      type: replacement.type,
-    };
-
-    allReplacements.push(newReplacement);
 
     save(false);
+
+    let numOps = 0;
+
+    while (true) {
+      const replacement = reduceCases(allCases, stateName, startVal);
+
+      if (!replacement) {
+        break;
+      }
+
+      numOps++;
+
+      const newEdits = replacement.editedNodes.map((node) => {
+        const code = render(stringify(node.statements));
+
+        return {
+          id: node.id,
+          code,
+        };
+      });
+
+      console.log("\t" + replacement.type);
+
+      const newReplacement = {
+        nodesDeleted: replacement.nodesDeleted,
+        edgesAdded: replacement.edgesAdded,
+        editedNodes: newEdits,
+        type: replacement.type,
+      };
+
+      allReplacements.push(newReplacement);
+
+      save(false);
+    }
+
+    assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
+
+    if (numOps > 4) save(true);
+
+    const [finalCase] = allCases;
+    assert.equal(finalCase.children.length, 0);
+
+    containingBlock.statements = [
+			...containingBlock.statements.slice(0,startIdx),
+      new Shift.ExpressionStatement({
+        expression: new Shift.LiteralStringExpression({
+          value: "Unpacked from graph",
+        }),
+      }),
+      ...finalCase.statements,
+      ...containingBlock.statements.slice(2),
+    ]; // Remove the variable declaration and switch statement.
+
+    sess(forLoop).delete();
+    sess(stateDeclSt).delete();
+  } catch (err) {
+    console.error(err);
+
+    // Now, invalidate the loop so we don't get caught on it later.
+
+    if (!forLoop) {
+      console.log("Control flow program didn't even find a loop.");
+    } else {
+      sess(forLoop).prepend(
+        new Shift.ExpressionStatement({
+          expression: new Shift.LiteralStringExpression({
+            value: "Invalidated -- " + err.message,
+          }),
+        })
+      );
+    }
   }
-
-  assert.equal(allCases.length, 1, "The graph didn't fully reduce.");
-
-  console.log(numOps);
-
-  if (numOps > 4) save(true);
-
-  const [finalCase] = allCases;
-  assert.equal(finalCase.children.length, 0);
-
-  containingBlock.statements = [
-    ...finalCase.statements,
-    ...containingBlock.statements.slice(2),
-  ]; // Remove the variable declaration and switch statement.
-
-  sess(forLoop).delete();
-  sess(stateDeclSt).delete();
 
   return true;
 };
@@ -475,8 +609,13 @@ export default (sess) => {
   // Cleanup.
   const { session } = sess;
 
+	rimraf.sync("./graphs/*.json");
+
+	let idx=0;
+
   while (true) {
-    const deepenedFlow = deepenFlow(sess);
+    const deepenedFlow = deepenFlow(sess,idx);
+		idx++;
 
     if (!deepenedFlow) {
       break;

@@ -61,13 +61,12 @@ window.onload = async () => {
   let nodesArray, linksArray;
 
   const getRadius = (node) =>
-    sizeMultiplier*(rad + Math.floor(node.code.split('\n').length * linesRatio) + 2);
+    sizeMultiplier*(rad + Math.floor(node.code.code.split('\n').length * linesRatio) + 2);
 
   const makeArrays = () => {
     nodesArray = cases.map((oneCase) => ({
       id: oneCase.id,
       code: oneCase.code,
-      svg: oneCase.svg,
       x: width / 2,
       y: height / 2,
     }));
@@ -184,7 +183,6 @@ window.onload = async () => {
         const editRecord = editedNodes.find((record) => record.id === node.id);
         if (editRecord) {
           node.code = editRecord.code;
-          node.svg = editRecord.svg;
         }
       });
 
@@ -238,7 +236,7 @@ window.onload = async () => {
         'transform',
         (node) => `translate(${-getRadius(node)},${-getRadius(node)})`,
       )
-      .html((node) => node.svg)
+      .html((node) => node.code.svg)
       .select('svg')
       .attr('height', (node) => getRadius(node) * 2)
       .attr('width', (node) => getRadius(node) * 2);
@@ -306,7 +304,7 @@ window.onload = async () => {
         (node) => `translate(${-getRadius(node)},${-getRadius(node)})`,
       )
       .attr('clip-path', 'circle(50%)')
-      .html((node) => node.svg)
+      .html((node) => node.code.svg)
       .select('svg')
       .attr('width', (node) => getRadius(node) * 2)
       .attr('height', (node) => getRadius(node) * 2);
