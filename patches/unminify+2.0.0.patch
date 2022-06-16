@@ -11,3 +11,20 @@ index 7849842..41015f7 100644
        }
      }
      if (!inlinable.includes(init.type)) return null;
+diff --git a/node_modules/unminify/src/transforms/wildly-unsafe/partial-evaluate.js b/node_modules/unminify/src/transforms/wildly-unsafe/partial-evaluate.js
+index 226d57c..494f460 100644
+--- a/node_modules/unminify/src/transforms/wildly-unsafe/partial-evaluate.js
++++ b/node_modules/unminify/src/transforms/wildly-unsafe/partial-evaluate.js
+@@ -239,7 +239,11 @@ module.exports = function partialEvaluate(ast) {
+             if (objVal !== none) {
+               if (typeof objVal !== 'object') {
+                 if (typeof objVal !== 'function') {
+-                  return objVal[node.callee.property](...argVals);
++									if(node.callee.property in objVal) {
++										return objVal[node.callee.property](...argVals);
++									} else {
++										console.warn(`Could not find builtin method ${node.callee.property} for type ${node.callee.object.type}.`);
++									}
+                 }
+               } else if (Array.isArray(objVal) && isNonMutatingArrayMethod(node.callee.property)) {
+                 return objVal[node.callee.property](...argVals);
