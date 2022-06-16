@@ -4,7 +4,7 @@ import {refactor} from "shift-refactor";
  export default (session)=>{
 	 const root=session.nodes[0];
 	 const modified=unminifyTree(root,{
-		 safety:safetyLevels.WILDLY_UNSAFE
+		 safety:safetyLevels.UNSAFE
 	 });
 
 	 return refactor(modified);
