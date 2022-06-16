@@ -121,10 +121,4 @@ export default (sess) => {
 	}
 
 
-  // Now, un-invalidate some things.
-  sess(
-	`ExpressionStatement > LiteralStringExpression[value=/Invalidated -- .*/]`
-  )
-    .parents()
-    .delete();
 };

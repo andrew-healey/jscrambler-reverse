@@ -16,7 +16,7 @@ import {readFileSync,writeFileSync} from "fs";
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
-let skip="compressMultisets";
+let skip="evalConsts_2";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -64,6 +64,8 @@ runTransform(evalConsts,"evalConsts");
 runTransform(stringSplit,"stringSplit");
 
 runTransform(evalConsts,"evalConsts_2");
+
+runTransform(controlFlow,"controlFlow_4");
 
 runTransform(unminify,"unminify");
 

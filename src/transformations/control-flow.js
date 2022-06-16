@@ -126,7 +126,7 @@ const stringify = (statements) => {
  * Converts a Shift node of a case into my own Case type.
  * Return type: Case
  **/
-const makeCase = (shiftCase, stateName) => {
+const makeCase = (shiftCase, stateName,endVal) => {
   const { test, consequent } = shiftCase;
 
   is(test, "LiteralNumericExpression");
@@ -146,7 +146,7 @@ const makeCase = (shiftCase, stateName) => {
     return {
       id,
       statements,
-      children: [],
+      children: [endVal],
       conditional: undefined,
     };
   }
@@ -303,7 +303,6 @@ const reduceCases = (cases, stateName, startVal) => {
       }
 
       if (
-        countParents(alt, cases) == 1 &&
         cons.children.length == 1 &&
         cons.children[0] == aCase.id &&
         aCase.statements.length == 0
@@ -410,7 +409,7 @@ const reduceCases = (cases, stateName, startVal) => {
   // By default, return nothing.
 };
 
-const deepenFlow = (sess,idx) => {
+const deepenFlow = (sess,idx,customSave) => {
   let forLoop;
   try {
     const switcher = sess(
@@ -496,7 +495,7 @@ const deepenFlow = (sess,idx) => {
     };
 
     const foundCases = cases.map((foundCase) =>
-      makeCase(foundCase, stateName, startVal)
+      makeCase(foundCase, stateName, startVal,endVal)
     );
 
     const allCases = [...foundCases, builtInCase];
@@ -525,10 +524,10 @@ const deepenFlow = (sess,idx) => {
       const serialized = JSON.stringify(saveObj, null, 2);
 
       writeFileSync((done ? "full" : "partial") + "-graph.json", serialized);
-			const partialSave="./graphs/"+idx+".json";
+			const partialSave=customSave ?? ("./graphs/"+idx+".json");
 			if(done) rimraf.sync(partialSave);
 
-			const whichSave = done?`./graphs/done-${idx}.json`:partialSave;
+			const whichSave = customSave ?? (done?`./graphs/done-${idx}.json`:partialSave);
       writeFileSync(whichSave, serialized);
     };
 
@@ -609,16 +608,24 @@ const deepenFlow = (sess,idx) => {
   return true;
 };
 
-export default (sess) => {
+export default (sess,customSave) => {
+
+  // Un-invalidate graphs from the past.
+  sess(
+	`ExpressionStatement > LiteralStringExpression[value=/Invalidated -- .*/]`
+  )
+    .parents()
+    .delete();
+
   // Cleanup.
   const { session } = sess;
 
-	rimraf.sync("./graphs/*.json");
+	if(!customSave) rimraf.sync("./graphs/*.json");
 
 	let idx=0;
 
   while (true) {
-    const deepenedFlow = deepenFlow(sess,idx);
+    const deepenedFlow = deepenFlow(sess,idx,customSave);
 		idx++;
 
     if (!deepenedFlow) {

@@ -71,6 +71,13 @@ window.onload = async () => {
       ) +
       2);
 
+  const pruneLinks = (someLinks) =>
+    someLinks.filter(
+      (link) =>
+          nodesArray.find(node=>node.id===link.source||node.id===link.source.id) &&
+					nodesArray.find(node=>node.id===link.target||node.id===link.target.id)
+    );
+
   const makeArrays = () => {
     nodesArray = cases.map((oneCase) => ({
       id: oneCase.id,
@@ -78,10 +85,12 @@ window.onload = async () => {
       x: width / 2,
       y: height / 2,
     }));
-    linksArray = edges.map((edge) => ({
-      source: edge[0],
-      target: edge[1],
-    }));
+    linksArray = pruneLinks(
+      edges.map((edge) => ({
+        source: edge[0],
+        target: edge[1],
+      }))
+    );
   };
 
   makeArrays();
@@ -117,8 +126,8 @@ window.onload = async () => {
     .attr("orient", "auto-start-reverse")
     .append("path")
     .attr("d", d3.line()(arrowPoints))
-    .attr("fill", "black")
-    //.attr("stroke", "black");
+    .attr("fill", "black");
+  //.attr("stroke", "black");
 
   svg.attr("width", width).attr("height", height);
 
@@ -162,46 +171,56 @@ window.onload = async () => {
   let links;
 
   const setLinkLocations = (someLinks) =>
-		someLinks.attr("points",edge=>{
-			const start=[edge.source.x,edge.source.y];
-			const end=[edge.target.x,edge.target.y];
+    someLinks.attr("points", (edge) => {
+      const start = [edge.source.x, edge.source.y];
+      const end = [edge.target.x, edge.target.y];
 
-			const startRad=getRadius(edge.source);
-			const endRad=getRadius(edge.target);
-			
-			const totalDist=Math.sqrt(Math.pow(start[0]-end[0],2)+Math.pow(start[1]-end[1],2));
+      const startRad = getRadius(edge.source);
+      const endRad = getRadius(edge.target);
 
-			const midDistance=((startRad)+(totalDist-endRad))/2
+      const totalDist = Math.sqrt(
+        Math.pow(start[0] - end[0], 2) + Math.pow(start[1] - end[1], 2)
+      );
 
-			const mid=[start[0]+(end[0]-start[0])*midDistance/totalDist,start[1]+(end[1]-start[1])*midDistance/totalDist];
+      const midDistance = (startRad + (totalDist - endRad)) / 2;
 
-			return [start,mid,end];
-		})
+      const mid = [
+        start[0] + ((end[0] - start[0]) * midDistance) / totalDist,
+        start[1] + ((end[1] - start[1]) * midDistance) / totalDist,
+      ];
 
-	/*someLinks
+      return [start, mid, end];
+    });
+
+  /*someLinks
 		.attr("x1", (edge) => edge.source.x)
 		.attr("y1", (edge) => edge.source.y)
 		.attr("x2", (edge) => edge.target.x)
 		.attr("y2", (edge) => edge.target.y);
 		*/
-	
 
-  const makeLinks = (someLinks) =>{
-		let passedLinks=[];
-    const ret=setLinkLocations(someLinks
-			.enter()
-			.append("polyline")
-			.attr("marker-mid","url(#arrow)")
-			.attr("link-id",edge=>`${edge.source.id}-${edge.target.id}`)
-			.attr("stroke-opacity",link=>{
-				if(document.querySelector(`[link-id="${link.target.id}-${link.source.id}"]`)){
-					return 0;
-				}
-				return 1;
-			}));
-			console.log(passedLinks)
-			return ret;
-		}
+  const makeLinks = (someLinks) => {
+    let passedLinks = [];
+    const ret = setLinkLocations(
+      someLinks
+        .enter()
+        .append("polyline")
+        .attr("marker-mid", "url(#arrow)")
+        .attr("link-id", (edge) => `${edge.source.id}-${edge.target.id}`)
+        .attr("stroke", (link) => {
+          if (
+            document.querySelector(
+              `[link-id="${link.target.id}-${link.source.id}"][stroke=red]`
+            )
+          ) {
+            return "none";
+          }
+          return "red";
+        })
+    );
+    console.log(passedLinks);
+    return ret;
+  };
 
   // Perform the next step in the replacement process.
   const replace = () => {
@@ -223,20 +242,13 @@ window.onload = async () => {
 
       nodesArray = nodesArray.filter((node) => !nodesDeleted.includes(node.id));
 
-      prunedArray = linksArray.filter(
-        (link) =>
-          !(
-            nodesDeleted.includes(link.source.id) ||
-            nodesDeleted.includes(link.target.id)
-          )
-      );
-      linksArray = [
-        ...prunedArray,
+      linksArray = pruneLinks([
+        ...linksArray,
         ...edgesAdded.map((edge) => ({
           source: edge[0],
           target: edge[1],
         })),
-      ];
+      ]);
       currStep++;
     }
 
@@ -341,7 +353,8 @@ window.onload = async () => {
       .attr("width", (node) => getRadius(node) * 2)
       .attr("height", (node) => getRadius(node) * 2);
 
-		const getColor=(node) => steps[currStep]?.nodesDeleted?.includes?.(node.id) ? "red" : "blue";
+    const getColor = (node) =>
+      steps[currStep]?.nodesDeleted?.includes?.(node.id) ? "red" : "blue";
     nodes
       .append("text")
       .attr("class", "num")
@@ -352,8 +365,8 @@ window.onload = async () => {
         return `translate(-${0},${dist})`;
       })
       .attr("stroke", getColor)
-			.attr("fill", getColor)
-			.style("font-size", "20px")
+      .attr("fill", getColor)
+      .style("font-size", "20px")
       .attr("font-family", "Consolas");
 
     return nodes;
@@ -367,7 +380,7 @@ window.onload = async () => {
 
     nodes = makeNodes(g_nodes.selectAll("g.circle").data(nodesArray));
 
-    links = makeLinks(g_links.selectAll("line").data(linksArray));
+    links = makeLinks(g_links.selectAll("polyline").data(linksArray));
   };
 
   nuke();
@@ -399,7 +412,11 @@ window.onload = async () => {
       .selectAll("polyline")
       .filter(
         (edge) =>
-          linksArray.findIndex((arrLink)=>arrLink.source.id===edge.source.id && arrLink.target.id === edge.target.id) !== -1
+          linksArray.findIndex(
+            (arrLink) =>
+              arrLink.source.id === edge.source.id &&
+              arrLink.target.id === edge.target.id
+          ) !== -1
       )
       .data(linksArray);
     update_links.exit().remove();
@@ -408,10 +425,14 @@ window.onload = async () => {
       .selectAll("polyline")
       .filter(
         (edge) =>
-          linksArray.findIndex((arrLink)=>arrLink.source.id===edge.source.id && arrLink.target.id === edge.target.id) === -1
+          linksArray.findIndex(
+            (arrLink) =>
+              arrLink.source.id === edge.source.id &&
+              arrLink.target.id === edge.target.id
+          ) === -1
       )
       .data([]);
-		remove_links.exit().remove();
+    remove_links.exit().remove();
 
     links = makeLinks(update_links).merge(update_links);
   };
