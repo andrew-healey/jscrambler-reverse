@@ -583,7 +583,7 @@ const deepenFlow = (sess,idx) => {
         }),
       }),
       ...finalCase.statements,
-      ...containingBlock.statements.slice(2),
+      ...containingBlock.statements.slice(startIdx+2),
     ]; // Remove the variable declaration and switch statement.
 
     sess(forLoop).delete();

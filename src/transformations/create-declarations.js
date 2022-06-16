@@ -21,7 +21,7 @@ export default (sess) => {
     } else {
       return; // Skip variables that I've already done.
     }
-    const { declarations, references } = variable;
+    const { declarations, references, name } = variable;
     if (declarations.length > 0) return;
 
     // Now, check if there's a "first" reference.
@@ -60,7 +60,6 @@ export default (sess) => {
 
           const minIdx = Math.min(...idxes);
           const firstAssignment = allStatements[minIdx];
-					console.log(minIdx);
 					if(minIdx==-1){
 						console.log(allStatements,blocks.nodes,statements)
 					}
@@ -79,8 +78,6 @@ export default (sess) => {
     // If there *is* a first, replace it with a proper declaration.
     if (writeInfo) {
       const { kind, node } = writeInfo;
-
-      console.log(writeInfo);
 
       const $firstWrite = sess(node);
       const $assignment = $firstWrite.parents();
