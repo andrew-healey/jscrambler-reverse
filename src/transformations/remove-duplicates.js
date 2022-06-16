@@ -50,5 +50,8 @@ export default (session) => {
     const allCalledMembers = session(allCalls.map((call) => call.callee));
 
     allCalledMembers.replace(() => operand);
+
+		// Now, delete the defunct duplicate.
+		$assign.delete();
   });
 };

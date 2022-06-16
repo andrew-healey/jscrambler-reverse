@@ -1,5 +1,4 @@
 import controlFlow from "./transformations/control-flow.js";
-import unknown from "./transformations/unknown.js";
 import unminify from "./transformations/unminify.js";
 import arrayVars from "./transformations/array-vars.js";
 import createDeclarations from "./transformations/create-declarations.js";
@@ -7,13 +6,17 @@ import objectSplit from "./transformations/object-split.js";
 import whileToFor from "./transformations/while-to-for.js";
 import removeDuplicates from "./transformations/remove-duplicates.js";
 import numberModulo from "./transformations/number-modulo.js";
+import evalConsts from "./transformations/eval-consts.js";
+import compressMultisets from "./transformations/compress-multisets.js";
+import stringSplit from "./transformations/string-split.js";
+import varToConst from "./transformations/var-to-const.js";
 
 import {readFileSync,writeFileSync} from "fs";
 
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
-let skip="controlFlow_2";
+let skip="compressMultisets";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -49,6 +52,18 @@ runTransform(removeDuplicates,"removeDuplicates");
 runTransform(numberModulo,"numberModulo");
 
 runTransform(controlFlow,"controlFlow_3");
+
+runTransform(createDeclarations,"createDeclarations_2");
+
+runTransform(compressMultisets,"compressMultisets");
+
+runTransform(varToConst,"varToConst");
+
+runTransform(evalConsts,"evalConsts");
+
+runTransform(stringSplit,"stringSplit");
+
+runTransform(evalConsts,"evalConsts_2");
 
 runTransform(unminify,"unminify");
 
