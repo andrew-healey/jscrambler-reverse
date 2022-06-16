@@ -5,13 +5,15 @@ import arrayVars from "./transformations/array-vars.js";
 import createDeclarations from "./transformations/create-declarations.js";
 import objectSplit from "./transformations/object-split.js";
 import whileToFor from "./transformations/while-to-for.js";
+import removeDuplicates from "./transformations/remove-duplicates.js";
+import numberModulo from "./transformations/number-modulo.js";
 
 import {readFileSync,writeFileSync} from "fs";
 
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
-let skip="unminify";
+let skip="controlFlow_2";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -42,11 +44,14 @@ runTransform(objectSplit,"objectSplit");
 
 runTransform(controlFlow,"controlFlow_2");
 
+runTransform(removeDuplicates,"removeDuplicates");
+
+runTransform(numberModulo,"numberModulo");
+
+runTransform(controlFlow,"controlFlow_3");
+
 runTransform(unminify,"unminify");
 
 runTransform(whileToFor,"whileToFor");
-
-//runTransform(unknown,"unknown");
-
 
 writeFileSync("beautified.js",sess.print());

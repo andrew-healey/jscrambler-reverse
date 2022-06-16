@@ -107,7 +107,6 @@ export default (sess) => {
             body: newBody,
           });
 
-          console.log("Replaced", updateVar.name);
           whileLoop.replace(loop);
           sess(varDeclSt).delete();
         }
