@@ -4,9 +4,11 @@
   "description": "A project to beat JScrambler, a popular enterprise code obfuscator.",
   "main": "index.js",
   "dependencies": {
+    "got": "^12.1.0",
     "patch-package": "^6.4.7",
     "playwright": "^1.22.2",
     "playwright-chromium": "^1.22.2",
+    "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "scarbon": "^1.0.9",
     "shift-ast": "^7.0.0",
@@ -19,7 +21,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-		"postinstall": "patch-package"
+    "postinstall": "patch-package"
   },
   "repository": {
     "type": "git",

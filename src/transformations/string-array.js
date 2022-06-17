@@ -145,7 +145,7 @@ export default (sess) => {
       );
     const arr = ret.split(delim);
 
-    console.log(arr);
+    //console.log(arr);
 
     // Now, it's time to use the weird control-flow graph contents of the string arr function.
 
@@ -239,8 +239,6 @@ export default (sess) => {
       ];
     }
 
-    console.log(tempArr.length);
-
 		const allCalls = sess(`CallExpression[callee.property=${JSON.stringify(propName)}][arguments.length=1][arguments.0.type=LiteralNumericExpression]`);
 
 		allCalls.replace(oneCall=>{
@@ -249,10 +247,6 @@ export default (sess) => {
 			const arrIdx=shiftNum.value;
 
 			const strVal=tempArr[arrIdx%tempArr.length];
-
-			if(!strVal){
-				console.log(arrIdx);
-			}
 
 			return new Shift.LiteralStringExpression({
 				value:strVal,

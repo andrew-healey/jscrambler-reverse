@@ -13,15 +13,18 @@ import varToConst from "./transformations/var-to-const.js";
 import integrityChecker from "./transformations/integrity-checker.js";
 import stringArray from "./transformations/string-array.js";
 import ifToSwitch from "./transformations/if-to-switch.js";
+import jsNice from "./transformations/jsnice.js"
+import removeGlobalObj from "./transformations/remove-global-obj.js";
 
 import {readFileSync,writeFileSync} from "fs";
+import {format} from "prettier";
 
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
 const dir="demos/game/";
 
-let skip="stringArray";
+let skip="whileToFor";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -29,13 +32,13 @@ const gameScript=readFileSync(dir+file+".js","utf8");
 
 let sess=refactor(gameScript);
 
-const runTransform=(transform,name)=>{
+const runTransform=async (transform,name)=>{
 	if(skip!=="") {
 		if(skip===name) skip="";
     console.log(`Skipping ${name}`);
     return;
 	}
-	sess=transform(sess)??sess;
+	sess=(await transform(sess))??sess;
 	assert.equal(sess.nodes.length,1);
 	const filename=`${dir}obf-${name}.js`;
 	const stringified=sess.print();
@@ -44,46 +47,48 @@ const runTransform=(transform,name)=>{
 	console.log(`${name} done`);
 }
 
-runTransform(controlFlow,"controlFlow");
+await runTransform(controlFlow,"controlFlow");
 
-runTransform(arrayVars,"arrayVars");
+await runTransform(arrayVars,"arrayVars");
 
-runTransform(createDeclarations,"createDeclarations");
+await runTransform(createDeclarations,"createDeclarations");
 
-runTransform(objectSplit,"objectSplit");
+await runTransform(objectSplit,"objectSplit");
 
-runTransform(controlFlow,"controlFlow_2");
+await runTransform(controlFlow,"controlFlow_2");
 
-runTransform(removeDuplicates,"removeDuplicates");
+await runTransform(removeDuplicates,"removeDuplicates");
 
-runTransform(numberModulo,"numberModulo");
+await runTransform(numberModulo,"numberModulo");
 
-runTransform(controlFlow,"controlFlow_3");
+await runTransform(controlFlow,"controlFlow_3");
 
-runTransform(createDeclarations,"createDeclarations_2");
+await runTransform(createDeclarations,"createDeclarations_2");
 
-runTransform(compressMultisets,"compressMultisets");
+await runTransform(compressMultisets,"compressMultisets");
 
-runTransform(varToConst,"varToConst");
+await runTransform(varToConst,"varToConst");
 
-runTransform(evalConsts,"evalConsts");
+await runTransform(evalConsts,"evalConsts");
 
-runTransform(stringSplit,"stringSplit");
+await runTransform(stringSplit,"stringSplit");
 
-runTransform(evalConsts,"evalConsts_2");
+await runTransform(evalConsts,"evalConsts_2");
 
-runTransform(integrityChecker,"integrityChecker");
+await runTransform(integrityChecker,"integrityChecker");
 
-runTransform(stringArray,"stringArray");
+await runTransform(stringArray,"stringArray");
 
-runTransform(ifToSwitch,"ifToSwitch");
+await runTransform(ifToSwitch,"ifToSwitch");
 
-runTransform(controlFlow,"controlFlow_4");
+await runTransform(controlFlow,"controlFlow_4");
 
-// TODO remove the incessant if(someFunction.dfsj0()) {...} everywhere.
+await runTransform(unminify,"unminify");
 
-runTransform(unminify,"unminify");
+await runTransform(whileToFor,"whileToFor");
 
-runTransform(whileToFor,"whileToFor");
+await runTransform(removeGlobalObj,"removeGlobalObj");
 
-writeFileSync(dir+"beautified.js",sess.print());
+await runTransform(jsNice,"jsNice");
+
+writeFileSync(dir+"beautified.js",format(sess.print(),{parser:"babel"}));
