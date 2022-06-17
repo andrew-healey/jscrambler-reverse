@@ -614,6 +614,7 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
       ...containingBlock.statements.slice(startIdx + 2),
     ]; // Remove the variable declaration and switch statement.
 
+		is(forLoop,"ForStatement");
     sess(forLoop).delete();
     sess(stateDeclSt).delete();
   } catch (err) {
@@ -662,5 +663,4 @@ export default (sess, customSave) => {
     //sess.isDirty(true);
   }
 
-  //session.globalState.conditionalCleanup();
 };

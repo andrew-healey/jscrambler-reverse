@@ -20,7 +20,7 @@ import assert from "node:assert";
 
 const dir="demos/game/";
 
-let skip="integrityChecker";
+let skip="";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -36,9 +36,11 @@ const runTransform=(transform,name)=>{
 	}
 	sess=transform(sess)??sess;
 	assert.equal(sess.nodes.length,1);
-	sess=refactor(sess.print());
+	const filename=`${dir}obf-${name}.js`;
+	const stringified=sess.print();
+	writeFileSync(filename,stringified);
+	sess=refactor(stringified);
 	console.log(`${name} done`);
-	writeFileSync(`${dir}obf-${name}.js`,sess.print());
 }
 
 runTransform(controlFlow,"controlFlow");

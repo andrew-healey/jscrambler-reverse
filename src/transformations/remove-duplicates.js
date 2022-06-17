@@ -52,6 +52,6 @@ export default (session) => {
     allCalledMembers.replace(() => operand);
 
 		// Now, delete the defunct duplicate.
-		$assign.delete();
+		$assign.parents().delete();
   });
 };
