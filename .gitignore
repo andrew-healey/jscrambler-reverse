@@ -3,3 +3,4 @@ node_modules/
 graphs/*.json
 demos/**/*.js
 debug/*
+output/*.js

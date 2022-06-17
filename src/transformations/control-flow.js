@@ -126,7 +126,7 @@ const stringify = (statements) => {
  * Converts a Shift node of a case into my own Case type.
  * Return type: Case
  **/
-const makeCase = (shiftCase, stateName,endVal) => {
+const makeCase = (shiftCase, stateName, endVal) => {
   const { test, consequent } = shiftCase;
 
   is(test, "LiteralNumericExpression");
@@ -280,12 +280,9 @@ const reduceCases = (cases, stateName, startVal) => {
 
       if (
         countParents(cons, cases) == 1 &&
-				(
-        cons.children.length == 1 &&
-        cons.children[0] == alt.id
-				||
-				cons.statements[cons.statements.length - 1]?.type === "ReturnStatement"
-				)
+        ((cons.children.length == 1 && cons.children[0] == alt.id) ||
+          cons.statements[cons.statements.length - 1]?.type ===
+            "ReturnStatement")
       ) {
         const finalIf = new Shift.IfStatement({
           test: aCase.conditional,
@@ -307,11 +304,14 @@ const reduceCases = (cases, stateName, startVal) => {
       }
 
       if (
-        cons.children.length == 1 &&
+        (cons.children.length == 1 || cons===aCase ) && // Make an exception for no-body while loops.
         cons.children[0] == aCase.id &&
         aCase.statements.length == 0
       ) {
-        if (countParents(cons, cases) == 1 && countParents(aCase, cases) == 2) {
+        if (
+          (countParents(cons, cases) == 1 && countParents(aCase, cases) == 2) ||
+          cons === aCase // While loops that have no body.
+        ) {
           const finalWhile = new Shift.WhileStatement({
             test: aCase.conditional,
             body: makeBlock(cons),
@@ -413,7 +413,7 @@ const reduceCases = (cases, stateName, startVal) => {
   // By default, return nothing.
 };
 
-const deepenFlow = (sess,idx,customSave) => {
+export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
   let forLoop;
   try {
     const switcher = sess(
@@ -437,7 +437,7 @@ const deepenFlow = (sess,idx,customSave) => {
 
     const statements = sess(containingBlock).statements().nodes;
 
-		const startIdx=statements.indexOf(forLoop) - 1;
+    const startIdx = statements.indexOf(forLoop) - 1;
     const stateDeclSt = statements[startIdx];
     // Extract state information from the initial variable declaration or assignment.
     const { binding, init } = (() => {
@@ -478,7 +478,7 @@ const deepenFlow = (sess,idx,customSave) => {
     is(right, "LiteralNumericExpression");
 
     const endVal = right.value;
-		//console.log(`startVal: ${startVal}, endVal: ${endVal}`);
+    //console.log(`startVal: ${startVal}, endVal: ${endVal}`);
 
     const { discriminant, cases } = switcher;
     is(discriminant, "IdentifierExpression");
@@ -505,6 +505,13 @@ const deepenFlow = (sess,idx,customSave) => {
 
     const allCases = [...foundCases, builtInCase];
 
+		if(justFindCases) {
+			return {
+				cases:allCases,
+				startVal
+			};
+		}
+
     // For logging purposes
     const bareCases = allCases.map((aCase) => ({
       id: aCase.id,
@@ -518,7 +525,7 @@ const deepenFlow = (sess,idx,customSave) => {
     // Save record of modifications to a JSON file.
     const save = (done) => {
       const saveObj = {
-				done,
+        done,
         startCase: startVal,
         cases: bareCases,
         edges: bareEdges,
@@ -528,11 +535,15 @@ const deepenFlow = (sess,idx,customSave) => {
 
       const serialized = JSON.stringify(saveObj, null, 2);
 
-      writeFileSync("output/"+(done ? "full" : "partial") + "-graph.json", serialized);
-			const partialSave=customSave ?? ("./graphs/"+idx+".json");
-			if(done) rimraf.sync(partialSave);
+      writeFileSync(
+        "output/" + (done ? "full" : "partial") + "-graph.json",
+        serialized
+      );
+      const partialSave = customSave ?? "./graphs/" + idx + ".json";
+      if (done) rimraf.sync(partialSave);
 
-			const whichSave = customSave ?? (done?`./graphs/done-${idx}.json`:partialSave);
+      const whichSave =
+        customSave ?? (done ? `./graphs/done-${idx}.json` : partialSave);
       writeFileSync(whichSave, serialized);
     };
 
@@ -572,12 +583,20 @@ const deepenFlow = (sess,idx,customSave) => {
       save(false);
     }
 
-		if(allCases.length>1){
-			const caseViz=Object.fromEntries(allCases.map(({id,children,code})=>[id,children]));
-			console.log(caseViz)
-		}
+    if (allCases.length > 1) {
+      const caseViz = Object.fromEntries(
+        allCases.map(({ id, children, code }) => [id, children])
+      );
+      console.log(caseViz);
+    }
 
-    assert.equal(allCases.length, 1, `The graph didn't fully reduce. IDX ${idx}, IDs ${JSON.stringify(allCases.map(aCase=>aCase.id))}`);
+    assert.equal(
+      allCases.length,
+      1,
+      `The graph didn't fully reduce. IDX ${idx}, IDs ${JSON.stringify(
+        allCases.map((aCase) => aCase.id)
+      )}`
+    );
 
     save(true);
 
@@ -585,14 +604,14 @@ const deepenFlow = (sess,idx,customSave) => {
     assert.equal(finalCase.children.length, 0);
 
     containingBlock.statements = [
-			...containingBlock.statements.slice(0,startIdx),
+      ...containingBlock.statements.slice(0, startIdx),
       new Shift.ExpressionStatement({
         expression: new Shift.LiteralStringExpression({
           value: "Unpacked from graph",
         }),
       }),
       ...finalCase.statements,
-      ...containingBlock.statements.slice(startIdx+2),
+      ...containingBlock.statements.slice(startIdx + 2),
     ]; // Remove the variable declaration and switch statement.
 
     sess(forLoop).delete();
@@ -618,11 +637,10 @@ const deepenFlow = (sess,idx,customSave) => {
   return true;
 };
 
-export default (sess,customSave) => {
-
+export default (sess, customSave) => {
   // Un-invalidate graphs from the past.
   sess(
-	`ExpressionStatement > LiteralStringExpression[value=/Invalidated -- .*/]`
+    `ExpressionStatement > LiteralStringExpression[value=/Invalidated -- .*/]`
   )
     .parents()
     .delete();
@@ -630,13 +648,13 @@ export default (sess,customSave) => {
   // Cleanup.
   const { session } = sess;
 
-	if(!customSave) rimraf.sync("./graphs/*.json");
+  if (!customSave) rimraf.sync("./graphs/*.json");
 
-	let idx=0;
+  let idx = 0;
 
   while (true) {
-    const deepenedFlow = deepenFlow(sess,idx,customSave);
-		idx++;
+    const deepenedFlow = deepenFlow(sess, idx, customSave);
+    idx++;
 
     if (!deepenedFlow) {
       break;

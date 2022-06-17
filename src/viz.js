@@ -42,7 +42,7 @@ window.onload = async () => {
   };
 
   const { startCase, cases, edges, steps } = await (
-    await fetch("output/"+(getFull ? "full" : "partial") + "-graph.json")
+    await fetch("output/" + (getFull ? "full" : "partial") + "-graph.json")
   ).json();
 
   setOps();
@@ -74,8 +74,12 @@ window.onload = async () => {
   const pruneLinks = (someLinks) =>
     someLinks.filter(
       (link) =>
-          nodesArray.find(node=>node.id===link.source||node.id===link.source.id) &&
-					nodesArray.find(node=>node.id===link.target||node.id===link.target.id)
+        nodesArray.find(
+          (node) => node.id === link.source || node.id === link.source.id
+        ) &&
+        nodesArray.find(
+          (node) => node.id === link.target || node.id === link.target.id
+        )
     );
 
   const makeArrays = () => {
@@ -296,9 +300,8 @@ window.onload = async () => {
         const dist = radius / Math.sqrt(2);
         return `translate(-${0},${dist})`;
       })
-      .attr("stroke", (node) =>
-        steps[currStep]?.nodesDeleted?.includes?.(node.id) ? "red" : "blue"
-      );
+      .attr("fill", getColor)
+      .attr("stroke", getColor);
   };
 
   const dragStarted = (node) => {
@@ -317,6 +320,9 @@ window.onload = async () => {
     node.fx = null;
     node.fy = null;
   };
+
+  const getColor = (node) =>
+    steps[currStep]?.nodesDeleted?.includes?.(node.id) ? "red" : "blue";
 
   const makeNodes = (someNodes) => {
     const nodes = someNodes
@@ -353,8 +359,6 @@ window.onload = async () => {
       .attr("width", (node) => getRadius(node) * 2)
       .attr("height", (node) => getRadius(node) * 2);
 
-    const getColor = (node) =>
-      steps[currStep]?.nodesDeleted?.includes?.(node.id) ? "red" : "blue";
     nodes
       .append("text")
       .attr("class", "num")

@@ -11,6 +11,7 @@ import compressMultisets from "./transformations/compress-multisets.js";
 import stringSplit from "./transformations/string-split.js";
 import varToConst from "./transformations/var-to-const.js";
 import integrityChecker from "./transformations/integrity-checker.js";
+import stringArray from "./transformations/string-array.js";
 
 import {readFileSync,writeFileSync} from "fs";
 
@@ -19,7 +20,7 @@ import assert from "node:assert";
 
 const dir="demos/game/";
 
-let skip="evalConsts_2";
+let skip="integrityChecker";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -69,6 +70,8 @@ runTransform(stringSplit,"stringSplit");
 runTransform(evalConsts,"evalConsts_2");
 
 runTransform(integrityChecker,"integrityChecker");
+
+runTransform(stringArray,"stringArray");
 
 runTransform(controlFlow,"controlFlow_4");
 
