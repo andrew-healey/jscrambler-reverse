@@ -433,7 +433,7 @@ const deepenFlow = (sess,idx,customSave) => {
     );
 
     const fullBlock = sess(containingBlock).codegen()[0];
-    writeFileSync("case-block.js", fullBlock);
+    writeFileSync("output/case-block.js", fullBlock);
 
     const statements = sess(containingBlock).statements().nodes;
 
@@ -478,7 +478,7 @@ const deepenFlow = (sess,idx,customSave) => {
     is(right, "LiteralNumericExpression");
 
     const endVal = right.value;
-		console.log(`startVal: ${startVal}, endVal: ${endVal}`);
+		//console.log(`startVal: ${startVal}, endVal: ${endVal}`);
 
     const { discriminant, cases } = switcher;
     is(discriminant, "IdentifierExpression");
@@ -528,7 +528,7 @@ const deepenFlow = (sess,idx,customSave) => {
 
       const serialized = JSON.stringify(saveObj, null, 2);
 
-      writeFileSync((done ? "full" : "partial") + "-graph.json", serialized);
+      writeFileSync("output/"+(done ? "full" : "partial") + "-graph.json", serialized);
 			const partialSave=customSave ?? ("./graphs/"+idx+".json");
 			if(done) rimraf.sync(partialSave);
 

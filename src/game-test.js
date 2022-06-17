@@ -10,17 +10,20 @@ import evalConsts from "./transformations/eval-consts.js";
 import compressMultisets from "./transformations/compress-multisets.js";
 import stringSplit from "./transformations/string-split.js";
 import varToConst from "./transformations/var-to-const.js";
+import integrityChecker from "./transformations/integrity-checker.js";
 
 import {readFileSync,writeFileSync} from "fs";
 
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
+const dir="demos/game/";
+
 let skip="evalConsts_2";
 
 const file=skip===""?"obf":"obf-"+skip;
 
-const gameScript=readFileSync("demos/game/"+file+".js","utf8");
+const gameScript=readFileSync(dir+file+".js","utf8");
 
 let sess=refactor(gameScript);
 
@@ -34,7 +37,7 @@ const runTransform=(transform,name)=>{
 	assert.equal(sess.nodes.length,1);
 	sess=refactor(sess.print());
 	console.log(`${name} done`);
-	writeFileSync(`demos/game/obf-${name}.js`,sess.print());
+	writeFileSync(`${dir}obf-${name}.js`,sess.print());
 }
 
 runTransform(controlFlow,"controlFlow");
@@ -65,10 +68,12 @@ runTransform(stringSplit,"stringSplit");
 
 runTransform(evalConsts,"evalConsts_2");
 
+runTransform(integrityChecker,"integrityChecker");
+
 runTransform(controlFlow,"controlFlow_4");
 
 runTransform(unminify,"unminify");
 
 runTransform(whileToFor,"whileToFor");
 
-writeFileSync("beautified.js",sess.print());
+writeFileSync(dir+"beautified.js",sess.print());

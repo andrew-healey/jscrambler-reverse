@@ -42,7 +42,7 @@ window.onload = async () => {
   };
 
   const { startCase, cases, edges, steps } = await (
-    await fetch((getFull ? "full" : "partial") + "-graph.json")
+    await fetch("output/"+(getFull ? "full" : "partial") + "-graph.json")
   ).json();
 
   setOps();
