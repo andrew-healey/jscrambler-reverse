@@ -12,6 +12,7 @@ import stringSplit from "./transformations/string-split.js";
 import varToConst from "./transformations/var-to-const.js";
 import integrityChecker from "./transformations/integrity-checker.js";
 import stringArray from "./transformations/string-array.js";
+import ifToSwitch from "./transformations/if-to-switch.js";
 
 import {readFileSync,writeFileSync} from "fs";
 
@@ -20,7 +21,7 @@ import assert from "node:assert";
 
 const dir="demos/game/";
 
-let skip="";
+let skip="stringArray";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -75,7 +76,11 @@ runTransform(integrityChecker,"integrityChecker");
 
 runTransform(stringArray,"stringArray");
 
+runTransform(ifToSwitch,"ifToSwitch");
+
 runTransform(controlFlow,"controlFlow_4");
+
+// TODO remove the incessant if(someFunction.dfsj0()) {...} everywhere.
 
 runTransform(unminify,"unminify");
 

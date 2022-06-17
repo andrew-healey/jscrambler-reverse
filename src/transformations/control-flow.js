@@ -304,7 +304,7 @@ const reduceCases = (cases, stateName, startVal) => {
       }
 
       if (
-        (cons.children.length == 1 || cons===aCase ) && // Make an exception for no-body while loops.
+        (cons.children.length == 1 || cons === aCase) && // Make an exception for no-body while loops.
         cons.children[0] == aCase.id &&
         aCase.statements.length == 0
       ) {
@@ -413,17 +413,34 @@ const reduceCases = (cases, stateName, startVal) => {
   // By default, return nothing.
 };
 
-export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
+export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
   let forLoop;
   try {
+    // TODO handle variable declarations and for loops which are split apart (but still in order).
     const switcher = sess(
-      `:matches(VariableDeclarationStatement, ExpressionStatement[expression.type=AssignmentExpression]) + ForStatement > BlockStatement > Block > SwitchStatement`
+		`:matches(VariableDeclarationStatement, ExpressionStatement[expression.type=AssignmentExpression]) ~ :matches(ForStatement, WhileStatement) > BlockStatement > Block:not([statements.0.type=ExpressionStatement][statements.0.expression.type=LiteralStringExpression][statements.0.expression.value=/Invalidated -- .*/]) > SwitchStatement`
     ).get(0);
     if (!switcher) return false;
     is(switcher, "SwitchStatement");
 
-    forLoop = sess(switcher).parents().parents().parents().get(0);
-    is(forLoop, "ForStatement");
+    const candidateLoop = sess(switcher).parents().parents().parents().get(0);
+		assert(candidateLoop.type==="ForStatement" || candidateLoop.type==="WhileStatement");
+
+    const { test } = candidateLoop;
+
+    is(test, "BinaryExpression");
+
+    const { left, right } = test;
+
+    is(left, "IdentifierExpression");
+    const stateName = left.name;
+    //assert.equal(left.name, stateName);
+
+    is(right, "LiteralNumericExpression");
+
+		forLoop=candidateLoop;
+
+    const endVal = right.value;
 
     const containingBlock = sess(forLoop).parents().get(0); // Block-like object.
     assert(
@@ -437,8 +454,57 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
 
     const statements = sess(containingBlock).statements().nodes;
 
-    const startIdx = statements.indexOf(forLoop) - 1;
-    const stateDeclSt = statements[startIdx];
+    const forIdx = statements.indexOf(forLoop);
+
+		// Check if this has been invalidated.
+
+		const prevStatement=statements[forIdx-1];
+		if(prevStatement&&prevStatement.type==="ExpressionStatement"){
+			const {expression}=prevStatement;
+			if(expression.type==="LiteralStringExpression"&&expression.value.startsWith("Invalidated -- ")){
+				return;
+			}
+		}
+
+    const stateDeclSt = statements.slice(0, forIdx).find((stmt) => {
+      if (stmt.type === "ExpressionStatement") {
+        const { expression } = stmt;
+        if (expression.type === "AssignmentExpression") {
+          const { binding } = expression;
+          if (
+            binding.type === "AssignmentTargetIdentifier" &&
+            binding.name === stateName
+          ) {
+            const startNode = expression.expression;
+            if (startNode.type === "LiteralNumericExpression") {
+							return true;
+            }
+          }
+        }
+      } else if (stmt.type === "VariableDeclarationStatement") {
+        const { declaration } = stmt;
+        if (declaration.type === "VariableDeclaration") {
+          const { declarators } = declaration;
+          if (declarators.length === 1) {
+            const [declarator] = declarators;
+            if (declarator.type === "VariableDeclarator") {
+              const { binding } = declarator;
+              if (
+                binding.type === "BindingIdentifier" &&
+                binding.name === stateName
+              ) {
+                const startNode = declarator.init;
+                if (startNode.type === "LiteralNumericExpression") {
+									return true;
+                }
+              }
+            }
+          }
+        }
+      }
+			return false;
+    });
+
     // Extract state information from the initial variable declaration or assignment.
     const { binding, init } = (() => {
       if (stateDeclSt.type === "ExpressionStatement") {
@@ -460,24 +526,11 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
     assert(binding);
     assert(init);
 
-    const stateName = binding.name;
     const startVal = init.value;
 
     assert(stateName);
     assert(startVal, "Start value is not a literal.");
 
-    const { test } = forLoop;
-
-    is(test, "BinaryExpression");
-
-    const { left, right } = test;
-
-    is(left, "IdentifierExpression");
-    assert.equal(left.name, stateName);
-
-    is(right, "LiteralNumericExpression");
-
-    const endVal = right.value;
     //console.log(`startVal: ${startVal}, endVal: ${endVal}`);
 
     const { discriminant, cases } = switcher;
@@ -505,12 +558,12 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
 
     const allCases = [...foundCases, builtInCase];
 
-		if(justFindCases) {
-			return {
-				cases:allCases,
-				startVal
-			};
-		}
+    if (justFindCases) {
+      return {
+        cases: allCases,
+        startVal,
+      };
+    }
 
     // For logging purposes
     const bareCases = allCases.map((aCase) => ({
@@ -583,12 +636,14 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
       save(false);
     }
 
+		/*
     if (allCases.length > 1) {
       const caseViz = Object.fromEntries(
         allCases.map(({ id, children, code }) => [id, children])
       );
       console.log(caseViz);
     }
+		*/
 
     assert.equal(
       allCases.length,
@@ -603,18 +658,19 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
     const [finalCase] = allCases;
     assert.equal(finalCase.children.length, 0);
 
+		const preForLoop = containingBlock.statements.slice(0, forIdx);
+
     containingBlock.statements = [
-      ...containingBlock.statements.slice(0, startIdx),
+			...preForLoop.filter(stmt=>stmt!==stateDeclSt),
       new Shift.ExpressionStatement({
         expression: new Shift.LiteralStringExpression({
           value: "Unpacked from graph",
         }),
       }),
       ...finalCase.statements,
-      ...containingBlock.statements.slice(startIdx + 2),
+      ...containingBlock.statements.slice(forIdx+1),
     ]; // Remove the variable declaration and switch statement.
 
-		is(forLoop,"ForStatement");
     sess(forLoop).delete();
     sess(stateDeclSt).delete();
   } catch (err) {
@@ -625,13 +681,15 @@ export const deepenFlow = (sess, idx, customSave, justFindCases=false) => {
     if (!forLoop) {
       console.log("Control flow program didn't even find a loop.");
     } else {
-      sess(forLoop).prepend(
+			const forBlock=forLoop.body.block;
+			forBlock.statements=[
         new Shift.ExpressionStatement({
           expression: new Shift.LiteralStringExpression({
             value: "Invalidated -- " + err.message,
           }),
-        })
-      );
+        }),
+				...forBlock.statements
+			]
     }
   }
 
@@ -662,5 +720,4 @@ export default (sess, customSave) => {
     }
     //sess.isDirty(true);
   }
-
 };
