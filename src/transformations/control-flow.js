@@ -146,7 +146,7 @@ const makeCase = (shiftCase, stateName,endVal) => {
     return {
       id,
       statements,
-      children: [endVal],
+      children: [], // TODO: decide if I should include endVal or not.
       conditional: undefined,
     };
   }
@@ -280,15 +280,19 @@ const reduceCases = (cases, stateName, startVal) => {
 
       if (
         countParents(cons, cases) == 1 &&
+				(
         cons.children.length == 1 &&
         cons.children[0] == alt.id
+				||
+				cons.statements[cons.statements.length - 1]?.type === "ReturnStatement"
+				)
       ) {
         const finalIf = new Shift.IfStatement({
           test: aCase.conditional,
           consequent: makeBlock(cons),
         });
         aCase.statements = [...aCase.statements, finalIf];
-        aCase.children = cons.children;
+        aCase.children = [alt.id];
 
         aCase.conditional = undefined;
 
@@ -474,6 +478,7 @@ const deepenFlow = (sess,idx,customSave) => {
     is(right, "LiteralNumericExpression");
 
     const endVal = right.value;
+		console.log(`startVal: ${startVal}, endVal: ${endVal}`);
 
     const { discriminant, cases } = switcher;
     is(discriminant, "IdentifierExpression");
@@ -495,7 +500,7 @@ const deepenFlow = (sess,idx,customSave) => {
     };
 
     const foundCases = cases.map((foundCase) =>
-      makeCase(foundCase, stateName, startVal,endVal)
+      makeCase(foundCase, stateName, endVal)
     );
 
     const allCases = [...foundCases, builtInCase];
@@ -566,6 +571,11 @@ const deepenFlow = (sess,idx,customSave) => {
 
       save(false);
     }
+
+		if(allCases.length>1){
+			const caseViz=Object.fromEntries(allCases.map(({id,children,code})=>[id,children]));
+			console.log(caseViz)
+		}
 
     assert.equal(allCases.length, 1, `The graph didn't fully reduce. IDX ${idx}, IDs ${JSON.stringify(allCases.map(aCase=>aCase.id))}`);
 
