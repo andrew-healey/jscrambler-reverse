@@ -34,7 +34,12 @@ export default (sess) => {
       .map((ref) => ref.node);
     const writeAssignments = sess(writeTargets)
       .parents()
-      .filter((node) => node.type === "AssignmentExpression");
+      .filter((node) =>{
+				const isAssign=node.type === "AssignmentExpression"
+				const parent=sess(node).parents()[0];
+				const assignStatement=parent && parent.type === "ExpressionStatement";
+				return isAssign && assignStatement;
+			});
 
     const sameTypeExprs = writeAssignments.nodes.every(
       (write) =>

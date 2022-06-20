@@ -287,6 +287,7 @@ window.onload = async () => {
         "transform",
         (node) => `translate(${-getRadius(node)},${-getRadius(node)})`
       )
+      .attr("clip-path", node=>`circle(${getRadius(node)-3}px)`)
       .html((node) => node.code.svg)
       .select("svg")
       .attr("height", (node) => getRadius(node) * 2)
@@ -353,7 +354,7 @@ window.onload = async () => {
         "transform",
         (node) => `translate(${-getRadius(node)},${-getRadius(node)})`
       )
-      .attr("clip-path", "circle(50%)")
+      .attr("clip-path", node=>`circle(${getRadius(node)-3}px)`)
       .html((node) => node.code.svg)
       .select("svg")
       .attr("width", (node) => getRadius(node) * 2)

@@ -149,12 +149,59 @@ export default (sess) => {
 
     // Now, it's time to use the weird control-flow graph contents of the string arr function.
 
-    sess(builtin)(
-      `ExpressionStatement > LiteralStringExpression[value=/Invalidated -- .*/]`
-    )
-      .parents()
-      .delete();
+		const twoNumCall=`CallExpression[arguments.length=2]:matches([arguments.0.type=LiteralNumericExpression], [arguments.0.type=UnaryExpression])[arguments.1.type=LiteralNumericExpression]`;
 
+		const allSplits=sess(builtin)(`ExpressionStatement > CallExpression > ${twoNumCall}`);
+
+		const modInfo=allSplits.map(numCall=>{
+			is(numCall,"CallExpression");
+
+			const numCalls=sess(numCall)(twoNumCall);
+			if(numCalls.nodes.length!==2) return;
+
+      const numParams = numCalls.map((call) =>
+        call.arguments.map((arg) => arg.value??-arg.operand.value)
+      );
+
+      const endSlice = numParams.find((numSet) => numSet[0] === -numSet[1])[1];
+      const slicedSubset = numParams.find((numSet) => numSet[0] === 0)[1];
+
+			const ifStmt=sess(numCall).parents().parents().parents().parents().parents().get(0);
+			is(ifStmt,"IfStatement");
+
+			const {test}=ifStmt;
+			is(test,"BinaryExpression");
+			assert.equal(test.operator,"&&");
+      const { left, right } = test;
+      // Find which side--left or right--corresponds to run #.
+
+      const runTest = [left, right].find((test) => {
+        is(test, "BinaryExpression");
+        assert.equal(test.operator, "===");
+
+        const ident = test.left;
+        const variable = sess(ident).lookupVariable()[0];
+
+        const { declarations } = variable;
+        assert.equal(declarations.length, 1);
+        const [decl] = declarations;
+        const declParent = sess(decl.node).parents().get(0);
+        return declParent.type === "VariableDeclarator";
+      });
+
+      const testTarget = runTest.right;
+      is(testTarget, "LiteralNumericExpression");
+      const runNum = testTarget.value;
+
+      return {
+        runNum,
+        endSlice,
+        slicedSubset,
+      };
+		}).filter(el=>el);
+
+
+		/*
     const deepFlow = deepenFlow(sess(builtin), undefined, undefined, true);
     assert(deepFlow);
     const { cases, startVal } = deepFlow; // Telling deepenFlow to *only* return the cases.
@@ -228,6 +275,7 @@ export default (sess) => {
         slicedSubset,
       };
     });
+		*/
 
     const sortedOps = modInfo.sort((a, b) => a.runNum - b.runNum);
 

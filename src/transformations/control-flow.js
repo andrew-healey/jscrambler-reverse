@@ -20,17 +20,17 @@ const getParents = ({ id }, cases) => {
   if (!parentsCache.has(cases))
     parentsCache.set(
       cases,
-			cases.reduce((parentMap,nextCase)=>{
-				for(let child of nextCase.children){
-					if(!(child in parentMap)){
-						parentMap[child]=[];
-					}
-					parentMap[child].push(nextCase);
-					return parentMap;
-				}
-			},{})
-		);
-	return parentsCache.get(cases)[id];
+      cases.reduce((parentMap, nextCase) => {
+        for (let child of nextCase.children) {
+          if (!(child in parentMap)) {
+            parentMap[child] = [];
+          }
+          parentMap[child].push(nextCase);
+        }
+        return parentMap;
+      }, {})
+    );
+  return parentsCache.get(cases)[id];
 	*/
   return cases.filter((aCase) => aCase.children.includes(id));
 };
@@ -93,7 +93,11 @@ const renderer = await new Scarbon({
   lang: "js",
 });
 const scarbon = (code) => {
-  const svg = renderer.svg(code);
+  const modCode = code.replace(
+    /"prettier-ignore";\s+break;/g,
+    "// prettier-ignore"
+  );
+  const svg = renderer.svg(modCode);
   const dataUrl = `data:image/svg+xml;utf8,${svg.replace(/$\s/gm, " ")}`;
   return svg;
 };
@@ -103,7 +107,8 @@ const shikiRenderer = await shiki.getHighlighter({
 });
 
 const html = (code) => {
-  return shikiRenderer.codeToHtml(code, { lang: "js" });
+  const modCode = code.replace(/"prettier-ignore"/g, "// prettier-ignore");
+  return shikiRenderer.codeToHtml(modCode, { lang: "js" });
 };
 
 const render = (code) => ({
@@ -119,6 +124,89 @@ const stringify = (statements) => {
   const sess = refactor(newBlock);
   return sess.codegen()[0];
   //return codeGen(newBlock);
+};
+
+const lookForLoop = (aCase, cases) => {
+  assert.equal(aCase.children.length, 2);
+  // Note: we're probably just assuming cons is the first. No flippy flippy stuff yet.
+
+  const loopStart = aCase.id;
+  const [firstChild, loopEnd] = aCase.children;
+
+  let visitedNodes = new Set([loopStart, loopEnd]);
+  let timesVisitingSelf = 0;
+  let nodesVisitingEnd = [];
+
+  let uncheckedNodes = [firstChild];
+
+  while (uncheckedNodes.length) {
+    const node = getCase(uncheckedNodes.pop(), cases);
+    visitedNodes.add(node.id);
+    const { children } = node;
+    if (children.includes(loopEnd)) nodesVisitingEnd.push(node.id);
+    if (children.includes(loopStart)) timesVisitingSelf++;
+    const uncheckedChildren = children.filter(
+      (childId) => !visitedNodes.has(childId)
+    );
+    uncheckedNodes = [...uncheckedNodes, ...uncheckedChildren];
+  }
+
+  const isLoop = timesVisitingSelf > 0;
+
+  if (isLoop && nodesVisitingEnd.length > 0) {
+    console.log("I found what looks like a broken loop. ID", loopStart);
+    const breaks = nodesVisitingEnd;
+    // Now, replace breaks with actual break nodes.
+
+    const edgesDeleted = [];
+    const edgesAdded = [];
+    const nodesAdded = [];
+
+    breaks.forEach((breakingNodeId) => {
+      const breakingNode = getCase(breakingNodeId, cases);
+      const newNode = {
+        statements: [
+          new Shift.ExpressionStatement({
+            expression: new Shift.LiteralStringExpression({
+              value: "prettier-ignore",
+            }),
+          }),
+          new Shift.BreakStatement({}),
+        ],
+        children: [],
+        conditional: undefined,
+      };
+      const maxNodeId = Math.max(...cases.map((aCase) => aCase.id));
+      newNode.id = maxNodeId + 1;
+      cases.push(newNode);
+      casesCache.delete(cases);
+      assert(getCase(newNode.id, cases) === newNode);
+      nodesAdded.push(newNode);
+
+      edgesAdded.push([newNode.id, loopStart]);
+
+      breakingNode.children = breakingNode.children.map((childId) => {
+        if (childId === loopEnd) {
+          edgesDeleted.push([breakingNode.id, loopEnd]);
+          edgesAdded.push([breakingNode.id, newNode.id]);
+
+          return newNode.id;
+        }
+        return childId;
+      });
+    });
+
+    console.log("Replaced", edgesDeleted, "with", edgesAdded);
+
+    return {
+      nodesAdded,
+      nodesDeleted: [],
+      edgesAdded,
+      edgesDeleted,
+      editedNodes: [],
+      type: "Loop Break",
+    };
+  }
 };
 
 /**
@@ -191,9 +279,11 @@ const makeCase = (shiftCase, stateName, endVal) => {
 };
 
 /*
- * type Reduction {
+ * type Replacement {
  *   nodesDeleted:number[]
+ *   nodesAdded?:number[]
  *   edgesAdded:[number,number][]
+ *   edgesDeleted?: [number,number][]
  *   editedNodes:number[]
  * }
  */
@@ -252,57 +342,6 @@ const reduceCases = (cases, stateName, startVal) => {
       const cons = getCase(aCase.children[0], cases);
       const alt = getCase(aCase.children[1], cases);
 
-      const isSimpleLeaf = (node) =>
-        countParents(node, cases) == 1 && node.children.length < 2;
-
-      if (
-        isSimpleLeaf(cons) &&
-        countParents(alt, cases) == 1 &&
-        alt.children[0] == cons.children[0]
-      ) {
-        const finalIf = new Shift.IfStatement({
-          test: aCase.conditional,
-          consequent: makeBlock(cons),
-          alternate: makeBlock(alt),
-        });
-        const nodesDeleted = deleteNodes(cases, [cons.id, alt.id]);
-        aCase.statements = [...aCase.statements, finalIf];
-        aCase.children = alt.children;
-        aCase.conditional = undefined;
-
-        return {
-          nodesDeleted,
-          edgesAdded: alt.children.map((childId) => [aCase.id, childId]),
-          editedNodes: [aCase],
-          type: "If-Else Statement",
-        };
-      }
-
-      if (
-        countParents(cons, cases) == 1 &&
-        ((cons.children.length == 1 && cons.children[0] == alt.id) ||
-          cons.statements[cons.statements.length - 1]?.type ===
-            "ReturnStatement")
-      ) {
-        const finalIf = new Shift.IfStatement({
-          test: aCase.conditional,
-          consequent: makeBlock(cons),
-        });
-        aCase.statements = [...aCase.statements, finalIf];
-        aCase.children = [alt.id];
-
-        aCase.conditional = undefined;
-
-        const nodesDeleted = deleteNodes(cases, [cons.id]);
-
-        return {
-          nodesDeleted,
-          edgesAdded: [],
-          editedNodes: [aCase],
-          type: "If Statement",
-        };
-      }
-
       if (
         (cons.children.length == 1 || cons === aCase) && // Make an exception for no-body while loops.
         cons.children[0] == aCase.id &&
@@ -348,83 +387,148 @@ const reduceCases = (cases, stateName, startVal) => {
         }
       }
     }
+  }
 
-    // Switch statements. Ignoring for now.
-    if (false && countParents(aCase, cases) > 2) {
-      const parents = getParents(aCase, cases);
+  // Next pass. This one checks for return-statement shenanigans.
+  // It's after *everything else* because this is a last-ditch effort to make the code work. If it's not necessary, it messes things up.
 
-      if (
-        parents.findIndex(
-          (parent) =>
-            parent.children.length !== 1 || countParents(parent, cases) !== 1
-        ) == -1
-      ) {
-        const decisionNodes = parents.map(
-          (parent) => getParents(parent, cases)[0]
-        );
+  for (let allowReturnShenanigans of [false, true])
+    for (let caseNum in cases) {
+      const aCase = cases[caseNum];
 
-        // Order all decision nodes.
+      if (aCase.children.length == 2) {
+        const realCons = getCase(aCase.children[0], cases);
+        const realAlt = getCase(aCase.children[1], cases);
 
-        const decisionChains = [];
-        for (let decisionNode of decisionNodes) {
-          let parentChain = decisionChains.findIndex((chain) =>
-            chain[chain.length - 1].children.includes(decisionNode.id)
+        const returnOptions = [
+          "ReturnStatement",
+          "ThrowStatement",
+          "BreakStatement",
+        ];
+        const isReturn = (aCase) =>
+          allowReturnShenanigans &&
+          returnOptions.includes(
+            aCase.statements[aCase.statements.length - 1]?.type
           );
 
-          let proposedChain = [decisionNode];
-          if (parentChain >= 0) {
-            proposedChain = [
-              ...decisionChains.splice(parentChain, 1),
-              ...proposedChain,
-            ];
+        for (let [cons, alt, invertConditional] of [
+          [realCons, realAlt, false],
+          [realAlt, realCons, true],
+        ]) {
+          const makeConditional = () =>
+            invertConditional
+              ? new Shift.UnaryExpression({
+                  operator: "!",
+                  operand: aCase.conditional,
+                })
+              : aCase.conditional;
+
+          if (
+            countParents(cons, cases) == 1 &&
+            countParents(alt, cases) == 1 &&
+            alt.children.length < 2 &&
+            cons.children.length < 2 &&
+            (alt.children[0] == cons.children[0] ||
+              isReturn(alt) ||
+              isReturn(cons))
+          ) {
+            const finalIf = new Shift.IfStatement({
+              test: makeConditional(),
+              consequent: makeBlock(cons),
+              alternate: makeBlock(alt),
+            });
+            const nodesDeleted = deleteNodes(cases, [cons.id, alt.id]);
+            aCase.statements = [...aCase.statements, finalIf];
+            aCase.children = [...new Set([...cons.children, ...alt.children])];
+            aCase.conditional = undefined;
+
+            return {
+              nodesDeleted,
+              edgesAdded: aCase.children.map((childId) => [aCase.id, childId]),
+              editedNodes: [aCase],
+              type: "If-Else Statement",
+            };
           }
 
-          let childChain = decisionChains.find((chain) =>
-            decisionNode.children.includes(chain[0].id)
-          );
+          if (
+            countParents(cons, cases) == 1 &&
+            ((cons.children.length == 1 && cons.children[0] == alt.id) ||
+              isReturn(cons))
+          ) {
+            const finalIf = new Shift.IfStatement({
+              test: makeConditional(),
+              consequent: makeBlock(cons),
+            });
+            aCase.statements = [...aCase.statements, finalIf];
+            aCase.children = [alt.id];
 
-          if (childChain >= 0) {
-            proposedChain = [
-              ...proposedChain,
-              ...decisionChains.splice(childChain, 1),
-            ];
+            aCase.conditional = undefined;
+
+            const nodesDeleted = deleteNodes(cases, [cons.id]);
+
+            return {
+              nodesDeleted,
+              edgesAdded: [],
+              editedNodes: [aCase],
+              type: "If Statement",
+            };
           }
-
-          decisionChains.push(proposedChain);
         }
-        const [orderedChain] = decisionChains;
-
-        const lastNode = orderedChain[orderedChain.length - 1];
-        const defaultNode = lastNode.children[1];
-        assert(
-          (defaultNode.children.length == 1 &&
-            defaultNode.children[0] === aCase.id) ||
-            (defaultNode.children.length == 0 && isTerminal(defaultNode)),
-          "The default node should go to post behavior. It does not."
-        );
-
-        const shiftCases = orderedChain.map((decisionNode) => {
-          const behaviorNode = getCase(decisionNode.children[0], parents);
-        });
       }
     }
+
+  // Truly scraping the bottom of the barrel here. Looking for loops with break statements.
+
+  // Start at the first node. Look for all potential loops with DFS.
+
+  const visitedNodes = new Set();
+
+  let nodesToVisit = [startVal];
+
+  while (nodesToVisit.length) {
+    const node = getCase(nodesToVisit.pop(), cases);
+
+    visitedNodes.add(node.id);
+
+    if (node.children.length == 2) {
+      console.log("Checking node", node.id);
+      const possibleBreakReplacements = lookForLoop(node, cases);
+      if (possibleBreakReplacements) {
+        return possibleBreakReplacements;
+      }
+    }
+
+    const uncheckedChildren = node.children.filter(
+      (childId) => !visitedNodes.has(childId)
+    );
+
+    nodesToVisit = [...nodesToVisit, ...uncheckedChildren];
   }
 
   // By default, return nothing.
+  // This might mean I made a mistake.
+  // It might also mean the program uses "a: {break a;}" logic.
+  // Not impossible, but a bit annoying.
 };
 
-export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
+export const deepenFlow = (sess, idx, customSave) => {
+  const isDebugging = !!customSave;
   let forLoop;
   try {
     // TODO handle variable declarations and for loops which are split apart (but still in order).
     const switcher = sess(
-		`:matches(VariableDeclarationStatement, ExpressionStatement[expression.type=AssignmentExpression]) ~ :matches(ForStatement, WhileStatement) > BlockStatement > Block:not([statements.0.type=ExpressionStatement][statements.0.expression.type=LiteralStringExpression][statements.0.expression.value=/Invalidated -- .*/]) > SwitchStatement`
+      `:matches(VariableDeclarationStatement, ExpressionStatement[expression.type=AssignmentExpression]) ~ :matches(ForStatement, WhileStatement) > BlockStatement > Block:not([statements.0.type=ExpressionStatement][statements.0.expression.type=LiteralStringExpression][statements.0.expression.value=/Invalidated -- .*/]) > SwitchStatement`
     ).get(0);
     if (!switcher) return false;
     is(switcher, "SwitchStatement");
 
     const candidateLoop = sess(switcher).parents().parents().parents().get(0);
-		assert(candidateLoop.type==="ForStatement" || candidateLoop.type==="WhileStatement");
+    assert(
+      candidateLoop.type === "ForStatement" ||
+        candidateLoop.type === "WhileStatement"
+    );
+
+    forLoop = candidateLoop;
 
     const { test } = candidateLoop;
 
@@ -437,8 +541,6 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
     //assert.equal(left.name, stateName);
 
     is(right, "LiteralNumericExpression");
-
-		forLoop=candidateLoop;
 
     const endVal = right.value;
 
@@ -456,15 +558,18 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
 
     const forIdx = statements.indexOf(forLoop);
 
-		// Check if this has been invalidated.
+    // Check if this has been invalidated.
 
-		const prevStatement=statements[forIdx-1];
-		if(prevStatement&&prevStatement.type==="ExpressionStatement"){
-			const {expression}=prevStatement;
-			if(expression.type==="LiteralStringExpression"&&expression.value.startsWith("Invalidated -- ")){
-				return;
-			}
-		}
+    const prevStatement = statements[forIdx - 1];
+    if (prevStatement && prevStatement.type === "ExpressionStatement") {
+      const { expression } = prevStatement;
+      if (
+        expression.type === "LiteralStringExpression" &&
+        expression.value.startsWith("Invalidated -- ")
+      ) {
+        return;
+      }
+    }
 
     const stateDeclSt = statements.slice(0, forIdx).find((stmt) => {
       if (stmt.type === "ExpressionStatement") {
@@ -477,7 +582,7 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
           ) {
             const startNode = expression.expression;
             if (startNode.type === "LiteralNumericExpression") {
-							return true;
+              return true;
             }
           }
         }
@@ -495,14 +600,14 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
               ) {
                 const startNode = declarator.init;
                 if (startNode.type === "LiteralNumericExpression") {
-									return true;
+                  return true;
                 }
               }
             }
           }
         }
       }
-			return false;
+      return false;
     });
 
     // Extract state information from the initial variable declaration or assignment.
@@ -558,13 +663,6 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
 
     const allCases = [...foundCases, builtInCase];
 
-    if (justFindCases) {
-      return {
-        cases: allCases,
-        startVal,
-      };
-    }
-
     // For logging purposes
     const bareCases = allCases.map((aCase) => ({
       id: aCase.id,
@@ -611,10 +709,12 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
         break;
       }
 
+      parentsCache.delete(allCases); // Allow the cache to be re-generated.
+
       numOps++;
 
       const newEdits = replacement.editedNodes.map((node) => {
-        const code = render(stringify(node.statements));
+        const code = isDebugging ? render(stringify(node.statements)) : {}; // Avoid expensive rendering when not in dedicated debug mode.
 
         return {
           id: node.id,
@@ -622,7 +722,7 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
         };
       });
 
-      console.log("\t" + replacement.type);
+      console.log("\t" + replacement.type + " #" + numOps);
 
       const newReplacement = {
         nodesDeleted: replacement.nodesDeleted,
@@ -633,14 +733,16 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
 
       allReplacements.push(newReplacement);
 
-      save(false);
+      if (isDebugging) {
+        save(false); // In non-debug, avoid expensive saving.
+      }
     }
 
-		/*
+    /*
     if (allCases.length > 1) {
-      const caseViz = Object.fromEntries(
+      const caseViz = JSON.stringify(Object.fromEntries(
         allCases.map(({ id, children, code }) => [id, children])
-      );
+      ),null,2);
       console.log(caseViz);
     }
 		*/
@@ -658,38 +760,37 @@ export const deepenFlow = (sess, idx, customSave, justFindCases = false) => {
     const [finalCase] = allCases;
     assert.equal(finalCase.children.length, 0);
 
-		const preForLoop = containingBlock.statements.slice(0, forIdx);
+    const preForLoop = containingBlock.statements.slice(0, forIdx);
 
     containingBlock.statements = [
-			...preForLoop.filter(stmt=>stmt!==stateDeclSt),
+      ...preForLoop.filter((stmt) => stmt !== stateDeclSt),
       new Shift.ExpressionStatement({
         expression: new Shift.LiteralStringExpression({
           value: "Unpacked from graph",
         }),
       }),
       ...finalCase.statements,
-      ...containingBlock.statements.slice(forIdx+1),
+      ...containingBlock.statements.slice(forIdx + 1),
     ]; // Remove the variable declaration and switch statement.
 
     sess(forLoop).delete();
     sess(stateDeclSt).delete();
   } catch (err) {
-    console.error(err);
-
     // Now, invalidate the loop so we don't get caught on it later.
 
+    console.error(err);
     if (!forLoop) {
       console.log("Control flow program didn't even find a loop.");
     } else {
-			const forBlock=forLoop.body.block;
-			forBlock.statements=[
+      const forBlock = forLoop.body.block;
+      forBlock.statements = [
         new Shift.ExpressionStatement({
           expression: new Shift.LiteralStringExpression({
             value: "Invalidated -- " + err.message,
           }),
         }),
-				...forBlock.statements
-			]
+        ...forBlock.statements,
+      ];
     }
   }
 
