@@ -114,8 +114,8 @@ export default (sess) => {
   oneParamBuiltins.forEach((builtin) => {
     const parent = sess(builtin).parents().get(0);
 
-		const dataProp=sess(builtin).parents().parents().get(0);
-		const propName=dataProp.name.value;
+    const dataProp = sess(builtin).parents().parents().get(0);
+    const propName = dataProp.name.value;
 
     const args = parent.arguments;
     assert.equal(args.length, 1);
@@ -123,9 +123,13 @@ export default (sess) => {
     const [shiftStr] = args;
     is(shiftStr, "LiteralStringExpression");
     const key = shiftStr.value;
-    const arrString = sess(
-      `FunctionDeclaration > FunctionBody > ReturnStatement:first-child > LiteralStringExpression`
-    ).get(0);
+    const arrString =
+      sess(
+        `FunctionDeclaration > FunctionBody > ReturnStatement:first-child > LiteralStringExpression`
+      ).get(0) ??
+      sess(
+        `CallExpression[callee.type=IdentifierExpression][callee.name=decodeURI][arguments.length=1][arguments.0.type=LiteralStringExpression]`
+      ).get(0);
     assert(arrString);
     is(arrString, "LiteralStringExpression");
     const rawArr = arrString.value;
@@ -149,59 +153,70 @@ export default (sess) => {
 
     // Now, it's time to use the weird control-flow graph contents of the string arr function.
 
-		const twoNumCall=`CallExpression[arguments.length=2]:matches([arguments.0.type=LiteralNumericExpression], [arguments.0.type=UnaryExpression])[arguments.1.type=LiteralNumericExpression]`;
+    const twoNumCall = `CallExpression[arguments.length=2]:matches([arguments.0.type=LiteralNumericExpression], [arguments.0.type=UnaryExpression])[arguments.1.type=LiteralNumericExpression]`;
 
-		const allSplits=sess(builtin)(`ExpressionStatement > CallExpression > ${twoNumCall}`);
+    const allSplits = sess(builtin)(
+      `ExpressionStatement > CallExpression > ${twoNumCall}`
+    );
 
-		const modInfo=allSplits.map(numCall=>{
-			is(numCall,"CallExpression");
+    const modInfo = allSplits
+      .map((numCall) => {
+        is(numCall, "CallExpression");
 
-			const numCalls=sess(numCall)(twoNumCall);
-			if(numCalls.nodes.length!==2) return;
+        const numCalls = sess(numCall)(twoNumCall);
+        if (numCalls.nodes.length !== 2) return;
 
-      const numParams = numCalls.map((call) =>
-        call.arguments.map((arg) => arg.value??-arg.operand.value)
-      );
+        const numParams = numCalls.map((call) =>
+          call.arguments.map((arg) => arg.value ?? -arg.operand.value)
+        );
 
-      const endSlice = numParams.find((numSet) => numSet[0] === -numSet[1])[1];
-      const slicedSubset = numParams.find((numSet) => numSet[0] === 0)[1];
+        const endSlice = numParams.find(
+          (numSet) => numSet[0] === -numSet[1]
+        )[1];
+        const slicedSubset = numParams.find((numSet) => numSet[0] === 0)[1];
 
-			const ifStmt=sess(numCall).parents().parents().parents().parents().parents().get(0);
-			is(ifStmt,"IfStatement");
+        const ifStmt = sess(numCall)
+          .parents()
+          .parents()
+          .parents()
+          .parents()
+          .parents()
+          .get(0);
+        is(ifStmt, "IfStatement");
 
-			const {test}=ifStmt;
-			is(test,"BinaryExpression");
-			assert.equal(test.operator,"&&");
-      const { left, right } = test;
-      // Find which side--left or right--corresponds to run #.
-
-      const runTest = [left, right].find((test) => {
+        const { test } = ifStmt;
         is(test, "BinaryExpression");
-        assert.equal(test.operator, "===");
+        assert.equal(test.operator, "&&");
+        const { left, right } = test;
+        // Find which side--left or right--corresponds to run #.
 
-        const ident = test.left;
-        const variable = sess(ident).lookupVariable()[0];
+        const runTest = [left, right].find((test) => {
+          is(test, "BinaryExpression");
+          assert.equal(test.operator, "===");
 
-        const { declarations } = variable;
-        assert.equal(declarations.length, 1);
-        const [decl] = declarations;
-        const declParent = sess(decl.node).parents().get(0);
-        return declParent.type === "VariableDeclarator";
-      });
+          const ident = test.left;
+          const variable = sess(ident).lookupVariable()[0];
 
-      const testTarget = runTest.right;
-      is(testTarget, "LiteralNumericExpression");
-      const runNum = testTarget.value;
+          const { declarations } = variable;
+          assert.equal(declarations.length, 1);
+          const [decl] = declarations;
+          const declParent = sess(decl.node).parents().get(0);
+          return declParent.type === "VariableDeclarator";
+        });
 
-      return {
-        runNum,
-        endSlice,
-        slicedSubset,
-      };
-		}).filter(el=>el);
+        const testTarget = runTest.right;
+        is(testTarget, "LiteralNumericExpression");
+        const runNum = testTarget.value;
 
+        return {
+          runNum,
+          endSlice,
+          slicedSubset,
+        };
+      })
+      .filter((el) => el);
 
-		/*
+    /*
     const deepFlow = deepenFlow(sess(builtin), undefined, undefined, true);
     assert(deepFlow);
     const { cases, startVal } = deepFlow; // Telling deepenFlow to *only* return the cases.
@@ -287,21 +302,24 @@ export default (sess) => {
       ];
     }
 
-		const allCalls = sess(`CallExpression[callee.property=${JSON.stringify(propName)}][arguments.length=1][arguments.0.type=LiteralNumericExpression]`);
+    const allCalls = sess(
+      `CallExpression[callee.property=${JSON.stringify(
+        propName
+      )}][arguments.length=1][arguments.0.type=LiteralNumericExpression]`
+    );
 
-		allCalls.replace(oneCall=>{
-			const args=oneCall.arguments;
-			const [shiftNum]=args;
-			const arrIdx=shiftNum.value;
+    allCalls.replace((oneCall) => {
+      const args = oneCall.arguments;
+      const [shiftNum] = args;
+      const arrIdx = shiftNum.value;
 
-			const strVal=tempArr[arrIdx%tempArr.length];
+      const strVal = tempArr[arrIdx % tempArr.length];
 
-			return new Shift.LiteralStringExpression({
-				value:strVal,
-			})
-		})
+      return new Shift.LiteralStringExpression({
+        value: strVal,
+      });
+    });
 
-		// TODO For the first few calls, this should *not* return a string. It should return the index of the current run.
-
+    // TODO For the first few calls, this should *not* return a string. It should return the index of the current run.
   });
 };

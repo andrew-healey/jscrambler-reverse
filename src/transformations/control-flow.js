@@ -196,8 +196,6 @@ const lookForLoop = (aCase, cases) => {
       });
     });
 
-    console.log("Replaced", edgesDeleted, "with", edgesAdded);
-
     return {
       nodesAdded,
       nodesDeleted: [],
@@ -288,6 +286,28 @@ const makeCase = (shiftCase, stateName, endVal) => {
  * }
  */
 
+const iterCases=function*(startVal,cases){
+  // Start at the first node. Look for all potential loops with DFS.
+
+  const visitedNodes = new Set();
+
+  let nodesToVisit = [startVal];
+
+  while (nodesToVisit.length) {
+    const node = getCase(nodesToVisit.pop(), cases);
+
+    visitedNodes.add(node.id);
+
+		yield node;
+
+    const uncheckedChildren = node.children.filter(
+      (childId) => !visitedNodes.has(childId)
+    );
+
+    nodesToVisit = [...nodesToVisit, ...uncheckedChildren];
+  }
+}
+
 /**
  * reduceCases
  * Iterates through all cases in the object. If it finds a pair of nodes it can reduce, it reduces them and returns info about the reduction. Otherwise, returns undefined.
@@ -311,6 +331,9 @@ const reduceCases = (cases, stateName, startVal) => {
         type: "Dead Code",
       };
     }
+	}
+
+	for(let aCase of iterCases(startVal,cases)){
 
     // Check for linearness.
     if (aCase.children.length == 1) {
@@ -344,10 +367,10 @@ const reduceCases = (cases, stateName, startVal) => {
 
       if (
         (cons.children.length == 1 || cons === aCase) && // Make an exception for no-body while loops.
-        cons.children[0] == aCase.id &&
-        aCase.statements.length == 0
+        cons.children[0] == aCase.id
       ) {
         if (
+        aCase.statements.length == 0 &&
           (countParents(cons, cases) == 1 && countParents(aCase, cases) == 2) ||
           cons === aCase // While loops that have no body.
         ) {
@@ -369,6 +392,7 @@ const reduceCases = (cases, stateName, startVal) => {
         }
 
         if (countParents(cons, cases) == 2 && countParents(aCase, cases) == 1) {
+					cons.statements=[...cons.statements, ...aCase.statements];
           const finalDoWhile = new Shift.DoWhileStatement({
             test: aCase.conditional,
             body: makeBlock(cons),
@@ -393,8 +417,7 @@ const reduceCases = (cases, stateName, startVal) => {
   // It's after *everything else* because this is a last-ditch effort to make the code work. If it's not necessary, it messes things up.
 
   for (let allowReturnShenanigans of [false, true])
-    for (let caseNum in cases) {
-      const aCase = cases[caseNum];
+    for (let aCase of iterCases(startVal, cases)) {
 
       if (aCase.children.length == 2) {
         const realCons = getCase(aCase.children[0], cases);
@@ -479,31 +502,16 @@ const reduceCases = (cases, stateName, startVal) => {
 
   // Truly scraping the bottom of the barrel here. Looking for loops with break statements.
 
-  // Start at the first node. Look for all potential loops with DFS.
-
-  const visitedNodes = new Set();
-
-  let nodesToVisit = [startVal];
-
-  while (nodesToVisit.length) {
-    const node = getCase(nodesToVisit.pop(), cases);
-
-    visitedNodes.add(node.id);
-
-    if (node.children.length == 2) {
-      console.log("Checking node", node.id);
-      const possibleBreakReplacements = lookForLoop(node, cases);
+	for(let aCase of iterCases(startVal, cases)) {
+    if (aCase.children.length == 2) {
+      console.log("Checking node", aCase.id);
+      const possibleBreakReplacements = lookForLoop(aCase, cases);
       if (possibleBreakReplacements) {
         return possibleBreakReplacements;
       }
     }
 
-    const uncheckedChildren = node.children.filter(
-      (childId) => !visitedNodes.has(childId)
-    );
-
-    nodesToVisit = [...nodesToVisit, ...uncheckedChildren];
-  }
+	}
 
   // By default, return nothing.
   // This might mean I made a mistake.

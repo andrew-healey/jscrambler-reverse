@@ -36,10 +36,15 @@ export default (sess) => {
       .parents()
       .filter((node) =>{
 				const isAssign=node.type === "AssignmentExpression"
-				const parent=sess(node).parents()[0];
+				const parent=sess(node).parents().get(0);
 				const assignStatement=parent && parent.type === "ExpressionStatement";
 				return isAssign && assignStatement;
 			});
+		if(writeTargets.length>writeAssignments.nodes.length+1){
+			// This means we have a lurking i.e. varName++
+			console.log("Failed",name);
+			return;
+		}
 
     const sameTypeExprs = writeAssignments.nodes.every(
       (write) =>

@@ -58,7 +58,7 @@ export default (sess) => {
             const $grandParent = $parent.parents(); // some_arr[0][4]
             const grandParent = $grandParent.get(0);
 
-            is(grandParent, "ComputedMemberExpression");
+						assert(grandParent.type === "ComputedMemberExpression"||grandParent.type === "ComputedMemberAssignmentTarget");
             const { expression } = grandParent;
             is(expression, "LiteralNumericExpression");
 

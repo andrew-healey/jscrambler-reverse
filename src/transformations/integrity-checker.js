@@ -42,7 +42,7 @@ export default (sess)=>{
 		const ifs=callParents.filter(parent=>parent.type==="IfStatement");
 		ifs.replace(ifStmt=>ifStmt.consequent)
 		
-		console.log("Deleted",propName);
+		//console.log("Deleted",propName);
 
 	})
 };

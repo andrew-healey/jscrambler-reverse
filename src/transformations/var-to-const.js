@@ -23,6 +23,7 @@ export default (sess)=>{
 		if(allWrites.length==1){
 			// This means the var decl is the only time it's written.
 			decl.kind="const";
+			console.log(variable.name);
 		}
 	})
 

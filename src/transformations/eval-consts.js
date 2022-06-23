@@ -1,5 +1,6 @@
-import assert from "node:assert"
+import assert from "node:assert";
 import { is } from "../assert-utils.js";
+import {refactor} from "shift-refactor";
 
 export const demo = `
 switch (/* ... */) {
@@ -14,29 +15,37 @@ switch (/* ... */) {
 }
 `;
 
-export default (sess)=>{
-	const constLiterals=sess("VariableDeclaration[kind=const] > VariableDeclarator > :matches(LiteralStringExpression, LiteralNumericExpression)");
-	const constDecls=constLiterals.parents();
+export default (sess) => {
+  const constLiterals = sess(
+    "VariableDeclaration[kind=const] > VariableDeclarator > :matches(LiteralStringExpression, LiteralNumericExpression, ObjectExpression)"
+  );
+  const constDecls = constLiterals.parents();
 
-	constDecls.forEach((decl)=>{
-		const {init} = decl;
+  constDecls.forEach((decl) => {
+    const { init } = decl;
+    const isLiteral = init.type !== "ObjectExpression";
 
-		const variable=sess(decl).lookupVariable()[0];
-		assert(variable);
+    const variable = sess(decl).lookupVariable()[0];
+    assert(variable);
 
-		const {references,name}=variable;
+    const { references, name } = variable;
 
-		const reads=references
-		.filter(ref=>!ref.accessibility.isWrite)
-		.map(ref=>ref.node);
+    const reads = references
+      .filter((ref) => !ref.accessibility.isWrite)
+      .map((ref) => ref.node);
 
-		sess(reads).replace(()=>init)
+    if (isLiteral || reads.length === 1) {
+      sess(reads).replace(() => init);
+			sess(decl).parents().parents().delete();
+    }
+  });
 
-	});
+	/*
+  const constDeclStmts = constDecls.parents().parents();
+  is(constDeclStmts.get(0), "VariableDeclarationStatement");
 
-	const constDeclStmts=constDecls.parents().parents()
-	is(constDeclStmts.get(0),"VariableDeclarationStatement");
+  constDeclStmts.delete();
+	*/
 
-	constDeclStmts.delete();
-
-}
+	return sess;
+};

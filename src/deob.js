@@ -24,9 +24,9 @@ import removeGlobalObj from "./transformations/remove-global-obj.js";
 import removeIife from "./transformations/remove-iife.js";
 import nestedAssignments from "./transformations/nested-assignments.js";
 
-const dir="demos/game-2/";
+const dir="demos/adv-ob-game/";
 
-let skip="";
+let skip="nestedAssignments";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -96,6 +96,8 @@ await runTransform(removeGlobalObj,"removeGlobalObj");
 await runTransform(unminify,"unminify_2");
 
 await runTransform(whileToFor,"whileToFor");
+
+await runTransform(objectSplit,"objectSplit_2");
 
 await runTransform(jsNice,"jsNice");
 

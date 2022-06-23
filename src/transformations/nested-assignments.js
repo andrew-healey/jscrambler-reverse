@@ -24,7 +24,6 @@ const unNestAssignments=(sess)=>{
 		const innerBinding=assignTwo.binding;
 		const mappedType=bindingMap[innerBinding.type];
 		if(mappedType){
-			console.log("Replaced",sess(statement).print())
 			const newStatement=new Shift.ExpressionStatement({
 				expression:assignTwo,
 			});
