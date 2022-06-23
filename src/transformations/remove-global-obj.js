@@ -20,7 +20,6 @@ export default (sess) => {
 		const funcs=allDecls.lookupVariable();
 		return funcs.filter(func=>{
 			const {declarations,references,name}=func;
-			console.log(references.map(ref=>ref.node.type));
 			const reads=references.filter(ref=>!ref.accessibility.isWrite);
 			return reads.length>0;
 		});

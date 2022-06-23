@@ -57,7 +57,6 @@ export default (sess) => {
 			const allAreStatic = memberTargets.every((target) => target.props.every(prop=>prop.type.startsWith("StaticMember")));
 
 			if(!(allAreStatic && memberTargets.length>0)) {
-				console.log("Not all static",variable.name);
 				return;
 			}
 

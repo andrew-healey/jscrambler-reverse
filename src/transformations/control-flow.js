@@ -786,7 +786,7 @@ export const deepenFlow = (sess, idx, customSave) => {
   } catch (err) {
     // Now, invalidate the loop so we don't get caught on it later.
 
-    console.error(err);
+    console.log(`\t${err.message}`);
     if (!forLoop) {
       console.log("Control flow program didn't even find a loop.");
     } else {

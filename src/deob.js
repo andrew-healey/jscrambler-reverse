@@ -24,9 +24,9 @@ import removeGlobalObj from "./transformations/remove-global-obj.js";
 import removeIife from "./transformations/remove-iife.js";
 import nestedAssignments from "./transformations/nested-assignments.js";
 
-const dir="demos/adv-ob-game/";
+const dir="demos/adv-ob-game-rep-2/";
 
-let skip="nestedAssignments";
+let skip="";
 
 const file=skip===""?"obf":"obf-"+skip;
 

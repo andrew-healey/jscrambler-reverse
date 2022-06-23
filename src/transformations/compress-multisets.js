@@ -42,7 +42,7 @@ export default (sess) => {
 			});
 		if(writeTargets.length>writeAssignments.nodes.length+1){
 			// This means we have a lurking i.e. varName++
-			console.log("Failed",name);
+			//console.log("Failed",name);
 			return;
 		}
 
