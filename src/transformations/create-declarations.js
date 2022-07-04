@@ -39,7 +39,7 @@ export default (sess) => {
 
       if (allNodes.nodes.length == 1 && blocksDoExist) {
         return {
-          kind: "const",
+          kind: "var", // Use var only. Let varToConst do the heavy lifting.
           node: allNodes.get(0),
         };
       }

@@ -28,7 +28,7 @@ export default (sess) => {
 	const funcsBefore=getCalledFunctions();
 
   const globalIife = sess(
-    `AssignmentExpression[binding.type=ComputedMemberAssignmentTarget] > CallExpression[arguments.length=0] > FunctionExpression[params.items.length=0]`
+    `AssignmentExpression:matches([binding.type=ComputedMemberAssignmentTarget], [binding.type=StaticMemberAssignmentTarget]) > CallExpression[arguments.length=0] > FunctionExpression[params.items.length=0]`
   ).first();
 
 	assert.equal(globalIife.nodes.length, 1);
@@ -36,7 +36,7 @@ export default (sess) => {
   is(globalAssign, "AssignmentExpression");
 
   const { binding } = globalAssign;
-  is(binding, "ComputedMemberAssignmentTarget");
+	assert(binding.type === "ComputedMemberAssignmentTarget" || binding.type === "StaticMemberAssignmentTarget");
   const { object } = binding;
   if (object.type !== "IdentifierExpression") return;
   const global = sess(object).lookupVariable()[0];

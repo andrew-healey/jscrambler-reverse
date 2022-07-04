@@ -17,7 +17,7 @@ switch (/* ... */) {
 
 export default (sess) => {
   const constLiterals = sess(
-    "VariableDeclaration[kind=const] > VariableDeclarator > :matches(LiteralStringExpression, LiteralNumericExpression, ObjectExpression)"
+    "VariableDeclaration[kind=const] > VariableDeclarator > :matches(LiteralStringExpression, LiteralNumericExpression, ObjectExpression,StaticMemberExpression[object.type=IdentifierExpression],IdentifierExpression)",
   );
   const constDecls = constLiterals.parents();
 
@@ -36,7 +36,16 @@ export default (sess) => {
 
     if (isLiteral || reads.length === 1) {
       sess(reads).replace(() => init);
-			sess(decl).parents().parents().delete();
+			// Now, decide whether or not to delete the *declarator* or *declaration statement*.
+			const $declarator=sess(decl);
+			const $declaration=$declarator.parents();
+			const declaration=$declaration.get(0);
+			if(declaration.declarators.length==1){
+				const $declarationStatement=$declaration.parents();
+				$declarationStatement.delete();
+			} else {
+				$declarator.delete();
+			}
     }
   });
 

@@ -2,6 +2,8 @@ import assert from "node:assert";
 import { is } from "../assert-utils.js";
 import { deepenFlow } from "./control-flow.js";
 import * as Shift from "shift-ast";
+import {refactor} from "shift-refactor";
+import {commonMethods} from "refactor-plugin-common"
 
 export const demo = `
   const I5 = {L_zBkB0: function (Y6) {
@@ -109,9 +111,10 @@ export const demo = `
 
 export default (sess) => {
   const oneParamBuiltins = sess(
-    `VariableDeclaration[kind=const][declarators.length=1] > VariableDeclarator > ObjectExpression[properties.length=1] > DataProperty[name.type=StaticPropertyName] > CallExpression[arguments.length=1][arguments.0.type=LiteralStringExpression] > FunctionExpression[params.items.length=1]`
+    `:matches(VariableDeclaration[kind=const][declarators.length=1] > VariableDeclarator, ReturnStatement) > ObjectExpression[properties.length=1] > DataProperty[name.type=StaticPropertyName] > CallExpression[arguments.length=1][arguments.0.type=LiteralStringExpression] > FunctionExpression[params.items.length=1]`
   );
   oneParamBuiltins.forEach((builtin) => {
+		console.log("Found one!")
     const parent = sess(builtin).parents().get(0);
 
     const dataProp = sess(builtin).parents().parents().get(0);
@@ -128,11 +131,12 @@ export default (sess) => {
         `FunctionDeclaration > FunctionBody > ReturnStatement:first-child > LiteralStringExpression`
       ).get(0) ??
       sess(
-        `CallExpression[callee.type=IdentifierExpression][callee.name=decodeURI][arguments.length=1][arguments.0.type=LiteralStringExpression]`
+        `CallExpression[callee.type=IdentifierExpression][callee.name=decodeURI][arguments.length=1][arguments.0.type=LiteralStringExpression] > LiteralStringExpression`
       ).get(0);
     assert(arrString);
     is(arrString, "LiteralStringExpression");
     const rawArr = arrString.value;
+		console.log("rawArr",rawArr.slice(0,100))
 
     const delimeter = sess(builtin)(
       `CallExpression[callee.type=StaticMemberExpression][arguments.length=1] > LiteralStringExpression[value.length=1]`
@@ -307,6 +311,7 @@ export default (sess) => {
         propName
       )}][arguments.length=1][arguments.0.type=LiteralNumericExpression]`
     );
+		console.log("How many calls?", allCalls.nodes.length);
 
     allCalls.replace((oneCall) => {
       const args = oneCall.arguments;
@@ -322,4 +327,8 @@ export default (sess) => {
 
     // TODO For the first few calls, this should *not* return a string. It should return the index of the current run.
   });
+
+	const newSess=refactor(sess.print(),commonMethods);
+	newSess.convertComputedToStatic();
+	return newSess;
 };

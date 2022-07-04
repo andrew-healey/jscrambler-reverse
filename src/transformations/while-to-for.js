@@ -31,8 +31,9 @@ export default (sess) => {
     `:matches(VariableDeclarationStatement, ExpressionStatement[expression.type=AssignmentExpression]) + WhileStatement[test.type=BinaryExpression] > BlockStatement > Block > ExpressionStatement:last-child > :matches(AssignmentExpression, UpdateExpression, CompoundAssignmentExpression)`
   );
 
-  updateExprs.forEach((expr) => {
+  updateExprs.nodes.forEach((expr) => {
     const whileBody = sess(expr).parents().parents().parents();
+		assert(whileBody.get(0))
     is(whileBody.get(0), "BlockStatement");
     const whileLoop = whileBody.parents();
     is(whileLoop.get(0), "WhileStatement");
@@ -72,8 +73,13 @@ export default (sess) => {
         return { declaration:expression, binding, init: expression };
       }
     })();
-		const {declaration} = declarator; // A make-believe "declaration" which I will use as the init of the for loop.
-    const variable = sess(declarator.binding).lookupVariable()[0];
+		const {declaration,binding} = declarator; // A make-believe "declaration" which I will use as the init of the for loop.
+		if(binding.type!=="BindingIdentifier"){
+		console.log(sess(binding).codegen());
+			return;
+		}
+		//console.log(declarator&&sess(declarator).print());
+    const variable = sess(binding).lookupVariable()[0];
 
     // Get variable in while loop test.
 
@@ -87,6 +93,7 @@ export default (sess) => {
       // Get variable in update.
 			const operand=expr.operand??expr.binding;
       if (operand.type === "AssignmentTargetIdentifier") {
+				console.log(operand.name);
         const updateVar = sess(operand).lookupVariable()[0];
 
         if (updateVar === testVar && testVar === variable) {
@@ -107,6 +114,7 @@ export default (sess) => {
             body: newBody,
           });
 
+					console.log("Replaced",whileLoop.print())
           whileLoop.replace(loop);
           sess(varDeclSt).delete();
         }

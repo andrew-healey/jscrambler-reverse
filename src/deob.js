@@ -4,6 +4,9 @@ import {format} from "prettier";
 import {refactor} from "shift-refactor"
 import assert from "node:assert";
 
+// Util.
+import launderConsts from "./launder-consts.js";
+
 import controlFlow from "./transformations/control-flow.js";
 import unminify from "./transformations/unminify.js";
 import arrayVars from "./transformations/array-vars.js";
@@ -23,10 +26,12 @@ import jsNice from "./transformations/jsnice.js"
 import removeGlobalObj from "./transformations/remove-global-obj.js";
 import removeIife from "./transformations/remove-iife.js";
 import nestedAssignments from "./transformations/nested-assignments.js";
+import concatRecycling from "./transformations/concat-recycling.js";
+import statementify from "./transformations/statementify.js";
 
-const dir="demos/adv-ob-game-rep-2/";
+const dir=process.argv[2]??"demos/geetest/";
 
-let skip="";
+let skip=process.argv[3]??"";
 
 const file=skip===""?"obf":"obf-"+skip;
 
@@ -41,6 +46,7 @@ const runTransform=async (transform,name)=>{
     return;
 	}
 	sess=(await transform(sess))??sess;
+	launderConsts(sess);
 	assert.equal(sess.nodes.length,1);
 	const filename=`${dir}obf-${name}.js`;
 	const stringified=sess.print();
@@ -48,6 +54,8 @@ const runTransform=async (transform,name)=>{
 	sess=refactor(stringified);
 	console.log(`${name} done`);
 }
+
+await runTransform(concatRecycling,"concatRecycling");
 
 await runTransform(removeIife,"removeIife");
 
@@ -61,6 +69,10 @@ await runTransform(objectSplit,"objectSplit");
 
 await runTransform(controlFlow,"controlFlow_2");
 
+await runTransform(varToConst,"varToConst");
+
+await runTransform(evalConsts,"evalConsts");
+
 await runTransform(removeDuplicates,"removeDuplicates");
 
 await runTransform(numberModulo,"numberModulo");
@@ -73,13 +85,13 @@ await runTransform(nestedAssignments,"nestedAssignments");
 
 await runTransform(compressMultisets,"compressMultisets");
 
-await runTransform(varToConst,"varToConst");
+await runTransform(varToConst,"varToConst_2");
 
-await runTransform(evalConsts,"evalConsts");
+await runTransform(evalConsts,"evalConsts_2");
 
 await runTransform(stringSplit,"stringSplit");
 
-await runTransform(evalConsts,"evalConsts_2");
+await runTransform(evalConsts,"evalConsts_3");
 
 await runTransform(integrityChecker,"integrityChecker");
 
@@ -89,15 +101,17 @@ await runTransform(ifToSwitch,"ifToSwitch");
 
 await runTransform(controlFlow,"controlFlow_4");
 
-await runTransform(unminify,"unminify");
+//await runTransform(removeGlobalObj,"removeGlobalObj");
 
-await runTransform(removeGlobalObj,"removeGlobalObj");
+await runTransform(unminify,"unminify");
 
 await runTransform(unminify,"unminify_2");
 
 await runTransform(whileToFor,"whileToFor");
 
 await runTransform(objectSplit,"objectSplit_2");
+
+//await runTransform(statementify,"statementify");
 
 await runTransform(jsNice,"jsNice");
 

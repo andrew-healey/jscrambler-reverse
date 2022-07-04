@@ -286,7 +286,7 @@ const makeCase = (shiftCase, stateName, endVal) => {
  * }
  */
 
-const iterCases=function*(startVal,cases){
+const iterCases = function* (startVal, cases) {
   // Start at the first node. Look for all potential loops with DFS.
 
   const visitedNodes = new Set();
@@ -298,7 +298,7 @@ const iterCases=function*(startVal,cases){
 
     visitedNodes.add(node.id);
 
-		yield node;
+    yield node;
 
     const uncheckedChildren = node.children.filter(
       (childId) => !visitedNodes.has(childId)
@@ -306,7 +306,7 @@ const iterCases=function*(startVal,cases){
 
     nodesToVisit = [...nodesToVisit, ...uncheckedChildren];
   }
-}
+};
 
 /**
  * reduceCases
@@ -331,10 +331,9 @@ const reduceCases = (cases, stateName, startVal) => {
         type: "Dead Code",
       };
     }
-	}
+  }
 
-	for(let aCase of iterCases(startVal,cases)){
-
+  for (let aCase of iterCases(startVal, cases)) {
     // Check for linearness.
     if (aCase.children.length == 1) {
       const child = getCase(aCase.children[0], cases);
@@ -359,57 +358,93 @@ const reduceCases = (cases, stateName, startVal) => {
           type: "Sequential Statement",
         };
       }
+
+      if (aCase.children[0] === aCase.id) {
+        // We have a while loop on our hands.
+
+        const block = makeBlock(aCase);
+        const newStatement = new Shift.WhileStatement({
+          test: new Shift.LiteralBooleanExpression({
+            value: true,
+          }),
+          body: block,
+        });
+
+        aCase.statements = [newStatement];
+        aCase.children = [];
+
+        const edgesDeleted = [[aCase.id, aCase.id]];
+        const editedNodes = [aCase];
+
+        return {
+          nodesDeleted: [],
+          edgesAdded: [],
+          editedNodes,
+          edgesDeleted,
+          type: "Infinite Loop",
+        };
+      }
     }
 
     if (aCase.children.length == 2) {
-      const cons = getCase(aCase.children[0], cases);
-      const alt = getCase(aCase.children[1], cases);
+      const realCons = getCase(aCase.children[0], cases);
+      const realAlt = getCase(aCase.children[1], cases);
 
-      if (
-        (cons.children.length == 1 || cons === aCase) && // Make an exception for no-body while loops.
-        cons.children[0] == aCase.id
-      ) {
+      for (let [cons, alt, invertConditional] of [
+        [realCons, realAlt, false],
+        [realAlt, realCons, true],
+      ])
         if (
-        aCase.statements.length == 0 &&
-          (countParents(cons, cases) == 1 && countParents(aCase, cases) == 2) ||
-          cons === aCase // While loops that have no body.
+          (cons.children.length == 1 || cons === aCase) && // Make an exception for no-body while loops.
+          cons.children[0] == aCase.id
         ) {
-          const finalWhile = new Shift.WhileStatement({
-            test: aCase.conditional,
-            body: makeBlock(cons),
-          });
-          aCase.statements = [finalWhile];
-          aCase.children = [alt.id];
-          aCase.conditional = undefined;
+          if (
+            (aCase.statements.length == 0 &&
+              countParents(cons, cases) == 1 &&
+              countParents(aCase, cases) == 2) ||
+            cons === aCase // While loops that have no body.
+          ) {
+            const finalWhile = new Shift.WhileStatement({
+              test: aCase.conditional,
+              body: makeBlock(cons),
+            });
+            aCase.statements = [finalWhile];
+            aCase.children = [alt.id];
+            aCase.conditional = undefined;
 
-          const nodesDeleted = deleteNodes(cases, [cons.id]);
-          return {
-            nodesDeleted,
-            edgesAdded: [],
-            editedNodes: [aCase],
-            type: "While Loop",
-          };
+						const nodesToDelete=cons.id===aCase.id?[]:[cons.id];
+
+            const nodesDeleted = deleteNodes(cases, nodesToDelete);
+            return {
+              nodesDeleted,
+              edgesAdded: [],
+              editedNodes: [aCase],
+              type: "While Loop",
+            };
+          }
+
+          if (
+            countParents(cons, cases) == 2 &&
+            countParents(aCase, cases) == 1
+          ) {
+            cons.statements = [...cons.statements, ...aCase.statements];
+            const finalDoWhile = new Shift.DoWhileStatement({
+              test: aCase.conditional,
+              body: makeBlock(cons),
+            });
+            cons.statements = [finalDoWhile];
+            cons.children = [alt.id];
+            cons.conditional = undefined;
+
+            const nodesDeleted = deleteNodes(cases, [aCase.id]);
+            return {
+              nodesDeleted,
+              edgesAdded: [[cons.id, alt.id]],
+              editedNodes: [cons],
+              type: "Do-While Loop",
+            };
+          }
         }
-
-        if (countParents(cons, cases) == 2 && countParents(aCase, cases) == 1) {
-					cons.statements=[...cons.statements, ...aCase.statements];
-          const finalDoWhile = new Shift.DoWhileStatement({
-            test: aCase.conditional,
-            body: makeBlock(cons),
-          });
-          cons.statements = [finalDoWhile];
-          cons.children = [alt.id];
-          cons.conditional = undefined;
-
-          const nodesDeleted = deleteNodes(cases, [aCase.id]);
-          return {
-            nodesDeleted,
-            edgesAdded: [[cons.id, alt.id]],
-            editedNodes: [cons],
-            type: "Do-While Loop",
-          };
-        }
-      }
     }
   }
 
@@ -418,7 +453,6 @@ const reduceCases = (cases, stateName, startVal) => {
 
   for (let allowReturnShenanigans of [false, true])
     for (let aCase of iterCases(startVal, cases)) {
-
       if (aCase.children.length == 2) {
         const realCons = getCase(aCase.children[0], cases);
         const realAlt = getCase(aCase.children[1], cases);
@@ -502,7 +536,7 @@ const reduceCases = (cases, stateName, startVal) => {
 
   // Truly scraping the bottom of the barrel here. Looking for loops with break statements.
 
-	for(let aCase of iterCases(startVal, cases)) {
+  for (let aCase of iterCases(startVal, cases)) {
     if (aCase.children.length == 2) {
       console.log("Checking node", aCase.id);
       const possibleBreakReplacements = lookForLoop(aCase, cases);
@@ -510,8 +544,7 @@ const reduceCases = (cases, stateName, startVal) => {
         return possibleBreakReplacements;
       }
     }
-
-	}
+  }
 
   // By default, return nothing.
   // This might mean I made a mistake.
@@ -805,7 +838,19 @@ export const deepenFlow = (sess, idx, customSave) => {
   return true;
 };
 
+const signature=Date.now();
+const newTarget={
+	sanitize:(sess)=>{
+		sess("NewTargetExpression").replace(`"new.target.${signature}"`);
+	},
+	restore:(sess)=>{
+		sess(`LiteralStringExpression[value="new.target.${signature}"]`).replace(`new.target`);
+	}
+}
+
 export default (sess, customSave) => {
+	newTarget.sanitize(sess);
+
   // Un-invalidate graphs from the past.
   sess(
     `ExpressionStatement > LiteralStringExpression[value=/Invalidated -- .*/]`
@@ -829,4 +874,7 @@ export default (sess, customSave) => {
     }
     //sess.isDirty(true);
   }
+
+	//newTarget.restore(sess);
+
 };

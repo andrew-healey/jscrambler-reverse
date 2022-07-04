@@ -1,5 +1,6 @@
 import { is } from "../assert-utils.js";
 import * as Shift from "shift-ast";
+import assert from "node:assert"
 
 export const demo = `
 q9FmM[393964] = function (i4, R8, T4) {
@@ -19,33 +20,17 @@ q9FmM[393964] = function (i4, R8, T4) {
 	}
 		`;
 
-(sess)=>{
-		if(allCalls.nodes.length===0) return;
-
-    const propName = allCalls.get(0).callee.property;
-    const $parents = allCalls.parents();
-    if (
-      $parents.nodes.every(
-        (node) =>
-          node.type === "ComputedMemberExpression" &&
-          node.expression.type === "LiteralNumericExpression"
-      )
-    ) {
-      // Assume this is used for array num obfuscation.
-    }
-  }
-
 export default (sess) => {
-  const propDefs = sess(`DataProperty[name.type=StaticPropertyName]`);
+  const propDefs = sess(`DataProperty[name.type=StaticPropertyName] > CallExpression > FunctionExpression`);
   const [goodDef] = propDefs.nodes.flatMap((propDef) => {
     // i.e. we have found an object property defining this function.
 
     // Now, we look for a list of props--one is an array, two are numbers.
 
     const hasRightArgs = (callExpr) => {
-			is(callExpr,"CallExpression");
+      is(callExpr, "CallExpression");
       const args = callExpr.arguments;
-      if (args.length !== 3) return false;
+      if (args.length !== 2 && args.length !== 3) return false;
       const numericArgs = args.filter(
         (arg) => arg.type === "LiteralNumericExpression"
       );
@@ -53,17 +38,22 @@ export default (sess) => {
       const argNumbers = numericArgs.map((arg) => arg.value);
 
       const arrayArgs = args.filter((arg) => arg.type === "ArrayExpression");
-      if (arrayArgs.length !== 1) return false;
-      const [arrayArg] = arrayArgs;
-      if (arrayArg.elements.length !== 1) return false;
-      const [element] = arrayArg.elements;
-      if (element.type !== "LiteralNumericExpression") return false;
-      const { value } = element;
-      if (!argNumbers.includes(value)) return false;
+      if (arrayArgs.length !== args.length - 2) return false;
+      const arrLength = (() => {
+				if(arrayArgs.length===0) return argNumbers[0];
+        const [arrayArg] = arrayArgs;
+        if (arrayArg.elements.length !== 1) return false;
+        const [element] = arrayArg.elements;
+        if (element.type !== "LiteralNumericExpression") return false;
+        const { value } = element;
+				return value;
+      })();
+
+      if (!argNumbers.includes(arrLength)) return false;
 
       return {
-        length: value,
-        multiplier: argNumbers.find((arg) => arg !== value),
+        length: arrLength,
+        multiplier: argNumbers.find((arg) => arg !== arrLength),
       };
     };
 
@@ -73,52 +63,63 @@ export default (sess) => {
       parent.type === "CallExpression" && hasRightArgs(parent);
     while (!isParentGood(currParent.get(0))) {
       currParent = currParent.parents();
-			if(currParent.nodes.length==0) return [];
+      if (currParent.nodes.length == 0) return [];
     }
 
     if (isParentGood(currParent.get(0))) {
       // i.e. we found a good set of params.
       const { length, multiplier } = hasRightArgs(currParent.get(0));
-			return [{
-				length,
-				multiplier,
-				propDef
-			}];
+			console.log("Found something good!!",length,multiplier)
+      return [
+        {
+          length,
+          multiplier,
+          propDef,
+        },
+      ];
     }
 
-		return [];
+    return [];
   });
 
-	if(goodDef){
-		const { length, multiplier, propDef } = goodDef;
-		is(propDef,"DataProperty");
-		is(propDef.name,"StaticPropertyName");
+  if (goodDef) {
+    const { length, multiplier, propDef } = goodDef;
 
-		const propName = propDef.name.value;
+		const dataProp=sess(propDef).parents().parents().get(0);
 
-		// Now, find all references and replace them with numbers.
+    is(dataProp, "DataProperty");
+    is(dataProp.name, "StaticPropertyName");
 
-		const allCalls = sess(`CallExpression[callee.property=${JSON.stringify(propName)}]`);
-		allCalls.forEach(aCall=>{
-			// Find the indexing. Replace it.
-			const indexesTaken=[];
-			let prevMember;
-			let $aMember=sess(aCall).parents();
-			while($aMember.get(0).type==="ComputedMemberExpression"){
-				indexesTaken.push($aMember.get(0).expression.value);
-				prevMember=$aMember.get(0);
-				$aMember=$aMember.parents();
-			}
+    const propName = dataProp.name.value;
 
-			const calculatedIndex=indexesTaken.reduce((acc,curr)=>(acc*-multiplier+curr)%length,0);
-			const positivedIndex=(calculatedIndex+length)%length; // Convert -12 to 23
+    // Now, find all references and replace them with numbers.
 
-			sess(prevMember).replace(()=>new Shift.LiteralNumericExpression({
-				value:positivedIndex
-			}));
+    const allCalls = sess(
+      `CallExpression[callee.property=${JSON.stringify(propName)}]`
+    );
+    allCalls.forEach((aCall) => {
+      // Find the indexing. Replace it.
+      const indexesTaken = [];
+      let prevMember;
+      let $aMember = sess(aCall).parents();
+      while ($aMember.get(0).type === "ComputedMemberExpression") {
+        indexesTaken.push($aMember.get(0).expression.value);
+        prevMember = $aMember.get(0);
+        $aMember = $aMember.parents();
+      }
 
-		})
-	}
+      const calculatedIndex = indexesTaken.reduce(
+        (acc, curr) => (acc * -multiplier + curr) % length,
+        0
+      );
+      const positivedIndex = (calculatedIndex + length) % length; // Convert -12 to 23
 
-
+      sess(prevMember).replace(
+        () =>
+          new Shift.LiteralNumericExpression({
+            value: positivedIndex,
+          })
+      );
+    });
+  }
 };
