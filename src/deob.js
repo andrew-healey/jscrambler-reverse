@@ -28,6 +28,8 @@ import removeIife from "./transformations/remove-iife.js";
 import nestedAssignments from "./transformations/nested-assignments.js";
 import concatRecycling from "./transformations/concat-recycling.js";
 import statementify from "./transformations/statementify.js";
+import timeSpoof from "./transformations/time-spoof.js";
+import noStrict from "./transformations/no-strict.js";
 
 const dir=process.argv[2]??"demos/geetest/";
 
@@ -54,6 +56,8 @@ const runTransform=async (transform,name)=>{
 	sess=refactor(stringified);
 	console.log(`${name} done`);
 }
+
+await runTransform(timeSpoof,"timeSpoof");
 
 await runTransform(concatRecycling,"concatRecycling");
 
@@ -114,6 +118,8 @@ await runTransform(objectSplit,"objectSplit_2");
 //await runTransform(statementify,"statementify");
 
 await runTransform(jsNice,"jsNice");
+
+await runTransform(noStrict,"noStrict");
 
 writeFileSync(dir+"beautified.js",format(sess.print(),{parser:"babel"}));
 

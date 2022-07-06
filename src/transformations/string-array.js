@@ -306,8 +306,9 @@ export default (sess) => {
       ];
     }
 
+		// i.e. get all *string-valued* calls. The first few will be number-valued.
     const allCalls = sess(
-      `CallExpression[callee.property=${JSON.stringify(
+      `:not(ConditionalExpression[consequent.type=LiteralNumericExpression][alternate.type=LiteralNumericExpression] > BinaryExpression) > CallExpression[callee.property=${JSON.stringify(
         propName
       )}][arguments.length=1][arguments.0.type=LiteralNumericExpression]`
     );

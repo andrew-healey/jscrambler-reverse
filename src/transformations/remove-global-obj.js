@@ -2,6 +2,8 @@ import assert from "node:assert";
 import { is } from "../assert-utils.js";
 import { refactor } from "shift-refactor";
 
+// TODO very important: check if the real code depends on the global object. If so, this means the evaluation isn't done yet. Then leave the global object alone.
+
 export const demo = `
 q9FmM.F9cTsN = F9cTsN;
 H9ldg3(q9FmM[244428]);

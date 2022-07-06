@@ -71,7 +71,8 @@ export default (session) => {
     allCalledMembers.replace(() => newCallee);
 
 		// Now, delete the defunct duplicate.
-		$assign.parents().delete();
+		// Actually, because of the VM, keep it around.
+		//$assign.parents().delete();
   });
 
 	const out=`

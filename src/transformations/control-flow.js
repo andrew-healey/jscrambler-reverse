@@ -613,6 +613,8 @@ export const deepenFlow = (sess, idx, customSave) => {
     }
 
     const stateDeclSt = statements.slice(0, forIdx).find((stmt) => {
+			let startNode;
+
       if (stmt.type === "ExpressionStatement") {
         const { expression } = stmt;
         if (expression.type === "AssignmentExpression") {
@@ -621,10 +623,7 @@ export const deepenFlow = (sess, idx, customSave) => {
             binding.type === "AssignmentTargetIdentifier" &&
             binding.name === stateName
           ) {
-            const startNode = expression.expression;
-            if (startNode.type === "LiteralNumericExpression") {
-              return true;
-            }
+            startNode = expression.expression;
           }
         }
       } else if (stmt.type === "VariableDeclarationStatement") {
@@ -639,15 +638,22 @@ export const deepenFlow = (sess, idx, customSave) => {
                 binding.type === "BindingIdentifier" &&
                 binding.name === stateName
               ) {
-                const startNode = declarator.init;
-                if (startNode.type === "LiteralNumericExpression") {
-                  return true;
-                }
+                startNode = declarator.init;
               }
             }
           }
         }
       }
+
+			if(startNode){
+				if(startNode.type==="LiteralNumericExpression"){
+					return true;
+				}
+				if(startNode.type==="ConditionalExpression"&&startNode.consequent.type==="LiteralNumericExpression"&&startNode.alternate.type==="LiteralNumericExpression"){
+					return true;
+				}
+			}
+
       return false;
     });
 
@@ -672,7 +678,34 @@ export const deepenFlow = (sess, idx, customSave) => {
     assert(binding);
     assert(init);
 
-    const startVal = init.value;
+		/* Deconstruct init into a single number.
+		 * This is a bit of a process.
+		 * 1. If it's a number, return its value.
+		 * 2. If it's a ternary expression, create a new state (i.e. -1) with the conditional, append that to our states, and then set our start state to -1.
+		*/
+
+		const {startVal,extraCases}=(()=>{
+			if(init.type==="LiteralNumericExpression"){
+				return {
+					startVal:init.value,
+					extraCases:[]
+				}
+			}
+			if(init.type==="ConditionalExpression"){
+				const {test,consequent,alternate}=init;
+				const startVal=-1;
+				const newState={
+					id:startVal,
+					statements:[],
+					conditional:test,
+					children:[consequent,alternate].map(lit=>lit.value)
+				}
+				return {
+					startVal,
+					extraCases:[newState]
+				}
+			}
+		})();
 
     assert(stateName);
     assert(startVal, "Start value is not a literal.");
@@ -702,7 +735,7 @@ export const deepenFlow = (sess, idx, customSave) => {
       makeCase(foundCase, stateName, endVal)
     );
 
-    const allCases = [...foundCases, builtInCase];
+    const allCases = [...foundCases, builtInCase, ...extraCases]; // Shift cases, end value, and optional injected value at the beginning.
 
     // For logging purposes
     const bareCases = allCases.map((aCase) => ({

@@ -202,6 +202,7 @@ m2pNw.O3 = (function () {
                           D$ = E9 === 2 && j6 === 1 ? 8 : 7;
                           break;
                         case 5:
+													console.log("Added to my string counter",E9)
                           return E9++;
                           break;
                         case 1:
@@ -1997,7 +1998,7 @@ for (; p6Bxus !== 1; ) {
                     case 4:
                       try {
                         var F_ = Q1();
-												console.log("Current instruction:",F_)
+												console.log("Current instruction:",F_,T_[T_.length-1])
                         switch (F_) {
                           case 25: {
                             var c7, G6;
