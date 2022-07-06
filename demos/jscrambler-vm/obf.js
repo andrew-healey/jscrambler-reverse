@@ -1997,6 +1997,7 @@ for (; p6Bxus !== 1; ) {
                     case 4:
                       try {
                         var F_ = Q1();
+												console.log("Current instruction:",F_)
                         switch (F_) {
                           case 25: {
                             var c7, G6;

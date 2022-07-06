@@ -839,12 +839,12 @@ export const deepenFlow = (sess, idx, customSave) => {
 };
 
 const signature=Date.now();
-const newTarget={
+export const newTarget={
 	sanitize:(sess)=>{
 		sess("NewTargetExpression").replace(`"new.target.${signature}"`);
 	},
 	restore:(sess)=>{
-		sess(`LiteralStringExpression[value="new.target.${signature}"]`).replace(`new.target`);
+		sess(`LiteralStringExpression[value="new.target.${signature}"]`).replace(new Shift.NewTargetExpression({}));
 	}
 }
 
@@ -875,6 +875,6 @@ export default (sess, customSave) => {
     //sess.isDirty(true);
   }
 
-	//newTarget.restore(sess);
+	newTarget.restore(sess);
 
 };
